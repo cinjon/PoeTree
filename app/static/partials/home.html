@@ -1,0 +1,44 @@
+<p>Instructions</p>
+<div id="microphone"></div>
+<div id="info"></div>
+
+<div ng-show="hasVoice">
+  <div class="row search-row" ng-show="hasPermissions">
+    <div class="col-xs-12">
+      <input id="search-voice" class="search form-control" placeholder="Speak for Poems">
+    </div>
+  </div>
+  <div ng-show="!hasPermissions">
+    <p>Need your permissions</p>
+  </div>
+</div>
+
+<div class="row search-row" ng-show="!hasVoice">
+  <div class="col-xs-12">
+    <input id="search-text" class="search form-control" placeholder="Search for Poems">
+  </div>
+</div>
+
+<div id="content" class="main">
+  <div ng-show="hasPoem">
+    <div id="title">
+      {{poem.title}}
+    </div>
+    <div id="author">
+      {{poet.name}}
+    </div>
+    <div id="text" ng-bind-html="poemTextSanitize()">
+    </div>
+  </div>
+
+  <div ng-show="hasList">
+    <div class="list-poem" ng-repeat="poem in list track by $index">
+      <div class="list-index">
+        {{$index+1}}
+      </div>
+      <div class="list-title">
+        {{poem.title}}
+      </div>
+    </div>
+  </div>
+</div>

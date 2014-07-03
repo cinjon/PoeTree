@@ -1,0 +1,90 @@
+.page {
+    width:60%;
+    margin:auto;
+}
+
+.search {
+    text-align:center;
+    height:40px;
+    font-size:20px;
+}
+
+.search-row {
+    margin-top:50px;
+}
+
+.center {
+    width:60%;
+    margin:auto;
+}
+
+.list-poem {
+    clear:both;
+    margin-bottom:20px;
+}
+
+.list-index {
+    font-size:20px;
+    float: left;
+}
+
+.list-title {
+    font-size:20px;
+    float:left;
+    margin-left:30px;
+}
+
+.main {
+    padding-top: 20px;
+
+    min-height: 610px;
+}
+
+.footer-left {
+    float: left;
+}
+
+.footer-right {
+    float: right;
+}
+
+.active {
+  background-color: #C44741;
+  color: #f2f2f2;
+}
+
+.text-center {
+    text-align:center;
+}
+
+.typeahead-input {
+    border-radius: 20px;
+    width:100%;
+}
+
+.wide-input {
+    width: 450px;
+}
+
+.half-wide-input {
+    width: 250px;
+}
+
+.small-input {
+    width: 110px;
+}
+
+.scroll {
+    overflow:scroll;
+    height:610px;
+}
+
+.ellipsis {
+    -o-text-overflow: ellipsis;   /* Opera */
+    text-overflow:    ellipsis;   /* IE, Safari (WebKit) */
+    overflow:hidden;              /* don't show excess chars */
+    white-space:nowrap;           /* force single line */
+}
+
+/* For Angular-UI Bootstrap */
+.nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
