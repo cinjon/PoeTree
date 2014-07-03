@@ -1,0 +1,14 @@
+BeautifulSoup==3.2.1
+Flask==0.10.1
+Flask-Login==0.2.9
+Flask-SQLAlchemy==1.0
+Jinja2==2.7.1
+MarkupSafe==0.18
+SQLAlchemy==0.9.3
+Werkzeug==0.9.4
+ghostscript==0.4.1
+gunicorn==18.0
+itsdangerous==0.23
+psycopg2==2.5.2
+virtualenv==1.10.1
+wsgiref==0.1.2
