@@ -17,6 +17,25 @@ def page_not_found(e):
 @app.flask_app.route('/')
 @app.flask_app.route('/about')
 @app.flask_app.route('/home')
-@app.flask_app.route('/edit')
 def basic_pages(**kwargs):
     return make_response(open('app/public/template/index.html').read())
+
+@app.flask_app.route('/poet/<name>')
+def poet_page(name):
+    poet = app.models.Poet.query.filter(app.models.Poet.name == name.lower()).first()
+    if not poet:
+        return app.utility.xhr_response(
+            {'success':False}, 200)
+    else:
+        return app.utility.xhr_response(
+            {'success':True, 'poems':poet.display_poems(), 'poet':poet.get_name()}, 200)
+
+@app.flask_app.route('/poem/<name>')
+def poem_page(name):
+    poem = app.models.Poet.query.filter(app.models.Poet.name == name.lower()).first()
+    if not poem:
+        return app.utility.xhr_response(
+            {'success':False}, 200)
+    else:
+        return app.utility.xhr_response(
+            {'success':True, 'poem':poem.display_self()}, 200)

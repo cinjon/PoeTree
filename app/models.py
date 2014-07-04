@@ -11,6 +11,12 @@ class Poet(db.Model):
         self.name = name
         self.creation_time = utility.get_time()
 
+    def get_name(self):
+        return self.name.title()
+
+    def display_poems(self):
+        return [poem.display_self() for poem in self.poems.all()]
+
 def create_poet(name):
     poet = Poet(name)
     db.session.add(poet)
@@ -42,6 +48,12 @@ class Poem(db.Model):
     def set_youtube(self, youtube):
         self.youtube = youtube
         db.session.commit()
+
+    def get_title(self):
+        return self.title.title()
+
+    def display_self(self):
+        return {'text':self.text, 'title':self.get_title(), 'youtube':self.youtube, 'audio':self.audio, 'poet':Poet.query.get(self.poet_id).get_name()}
 
 def create_poem(title, text, youtube, audio, poet_id):
     poet = Poet.query.get(poet_id)
