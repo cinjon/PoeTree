@@ -2,9 +2,13 @@ import app
 import bs4
 import urllib2
 
+def clean_identifier(id):
+    #id is a soup find object. we want to yield and clean up the text
+    return ' '.join([k for k in id.getText().strip().lower().split(' ') if k])
+
 def get_poet(soup):
     try:
-        name = soup.find('div', {'id':'poemwrapper'}).find('span', {'class':'author'}).find('a').getText().strip()
+        name = clean_identifier(soup.find('div', {'id':'poemwrapper'}).find('span', {'class':'author'}).find('a'))
         if name:
             return app.models.get_or_create_poet(name)
         return None
@@ -27,7 +31,7 @@ def get_audio(soup):
 
 def get_title(soup):
     try:
-        return soup.find('div', {'id':'poem-top'}).getText().strip()
+        return clean_identifier(soup.find('div', {'id':'poem-top'}))
     except Exception, e:
         return None
 
