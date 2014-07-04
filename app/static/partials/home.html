@@ -1,22 +1,21 @@
 <p>Instructions</p>
-<div id="microphone"></div>
+<pre id="instructions">
+  <p>
+</pre>
 <div id="info"></div>
 
 <div ng-show="hasVoice">
-  <div class="row search-row" ng-show="hasPermissions">
+  <div class="row search-row">
     <div class="col-xs-12">
-      <input id="search-voice" class="search form-control" placeholder="Speak for Poems">
+      <div id="microphone"></div>
+      <input class="search form-control" ng-model="warning">
+      <input class="search form-control" placeholder="Speak for Poems" ng-model="searchTerm">
     </div>
-  </div>
-  <div ng-show="!hasPermissions">
-    <p>Need your permissions</p>
   </div>
 </div>
 
 <div class="row search-row" ng-show="!hasVoice">
-  <div class="col-xs-12">
-    <input id="search-text" class="search form-control" placeholder="Search for Poems">
-  </div>
+  <p>No Voice</p>
 </div>
 
 <div id="content" class="main">
