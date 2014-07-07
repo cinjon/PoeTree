@@ -5,6 +5,7 @@ import utility
 import config
 
 basedir = config.basedir
+wit_access_token = config.WIT_ACCESS_TOKEN
 
 flask_app = Flask(__name__, template_folder='public/template')
 flask_app.config.from_object('config')
