@@ -22,6 +22,7 @@ def basic_pages(**kwargs):
 
 @app.flask_app.route('/poet/<name>')
 def poet_page(name):
+    print 'poet: %s' % name
     poet = app.models.Poet.query.filter(app.models.Poet.name == name.lower()).first()
     if not poet:
         return app.utility.xhr_response(
@@ -30,12 +31,17 @@ def poet_page(name):
         return app.utility.xhr_response(
             {'success':True, 'poems':poet.display_poems(), 'poet':poet.get_name()}, 200)
 
-@app.flask_app.route('/poem/<name>')
-def poem_page(name):
-    poem = app.models.Poet.query.filter(app.models.Poet.name == name.lower()).first()
-    if not poem:
+@app.flask_app.route('/poem/<title>')
+def poem_page(title):
+    poems = app.models.Poem.query.filter(app.models.Poem.title == title.lower()).all()
+    if not poems:
         return app.utility.xhr_response(
             {'success':False}, 200)
     else:
+        if len(poems) == 1:
+            success = 'single'
+        else:
+            success = 'list'
+        poems = [p.display_self() for p in poems]
         return app.utility.xhr_response(
-            {'success':True, 'poem':poem.display_self()}, 200)
+            {'success':success, 'poems':poems}, 200)
