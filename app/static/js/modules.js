@@ -4,39 +4,22 @@ angular.module('Poetree', ['ui.bootstrap', 'poetreeServices', 'poetreeFilters'])
   .controller('about', function($scope) {
 
   })
-  .controller('home', function($scope, $sanitize, $http, $location, limitToFilter) {
+  .controller('home', function($scope, $sanitize, $http, $location, $timeout) {
     $scope.greeting = "PoeTree";
     $scope.searchTerm = $scope.greeting;
     $scope.hasInstructions = true;
     $scope.hasVoice = hasGetUserMedia();
     $scope.hasBack = false;
-
-    $scope.findPoet = function() {
-      do_search({'poet_name':{'value':'robert frost'}});
-    }
-    $scope.findPoem = function() {
-      do_search({'poem_name':{'value':'o captain! my captain!'}});
-    }
-    $scope.select = function(num) {
-      do_select({'number':{'value':num}});
-    }
     $scope.isGreeting = function() {
       return $scope.searchTerm == $scope.greeting;
-    }
-    $scope.do_instructions = function() {
-      do_instructions();
-    }
-    $scope.do_back = function() {
-      do_back();
     }
 
     var mic = new Wit.Microphone(document.getElementById("microphone"));
     mic.onready = function () {
-      console.log('ready')
       mic.start();
     };
     mic.onaudiostart = function () {
-      setTimeout(function() {
+      $timeout(function() {
         mic.stop()
       }, 2000)
     };
@@ -49,36 +32,34 @@ angular.module('Poetree', ['ui.bootstrap', 'poetreeServices', 'poetreeFilters'])
     mic.onresult = function(intent, entities) {
       console.log(intent);
       console.log(entities);
-      if (intent == 'search') {
-        do_search(entities)
+      if (intent == 'poet') {
+        do_search_poet(entities, $scope);
+      } else if (intent == 'poem') {
+        do_search_poem(entities);
       } else if (intent == 'select') {
         do_select(entities);
       } else if (intent == 'back') {
         do_back();
       } else if (intent == 'instructions') {
         do_instructions();
-      } else {
-        do_unknown();
       }
     }
-    // mic.connect('X4HVIEQCOLHU6VMRWJAEL5QM27OGGZSW'); //Move this to server
+    mic.connect('X4HVIEQCOLHU6VMRWJAEL5QM27OGGZSW');
 
-    var do_search = function(entities, callback) {
+    var set_search_settings = function(name) {
       $scope.searchTerm = name;
       $scope.warningTerm = '';
       $scope.hasInstructions = false;
-      //search for entity, either {poet_name:''} or {poem_name:''}
-      if ('poet_name' in entities) {
-        return do_search_poet(entities['poet_name']['value']);
-      } else if ('poem_name' in entities) {
-        return do_search_poem(entities['poem_name']['value']);
-      }
     }
 
-    var do_search_poem = function(name) {
-      $scope.searchTerm = name;
-      $scope.warningTerm = '';
-      $scope.hasInstructions = false;
+    var do_search_poem = function(entities) {
+      if (!('poem_name' in entities)) {
+        $scope.warningTerm = "Our hamsters heard you say a poem, but aren't quite sure which one.";
+        return;
+      }
+
+      name = entities['poem_name']['value']
+      set_search_settings(name);
       $http.get('/poem/' + name, {}).then(function(result) {
         if (result.data.success == 'single') {
           $scope.poem = result.data.poems[0];
@@ -86,6 +67,7 @@ angular.module('Poetree', ['ui.bootstrap', 'poetreeServices', 'poetreeFilters'])
           $scope.hasList = false;
           $scope.hasBack = false;
           $scope.searchTerm =  'Poem: ' + $scope.poem.title;
+          $scope.supplementaryInfo = $scope.poem.poet;
         } else if (result.data.success == 'list') {
           $scope.list = result.data.poems;
           $scope.hasPoem = false;
@@ -98,19 +80,27 @@ angular.module('Poetree', ['ui.bootstrap', 'poetreeServices', 'poetreeFilters'])
       });
     }
 
-    var do_search_poet = function(name) {
+    var do_search_poet = function(entities, $scope) {
+      if (!('poet_name' in entities)) {
+        $scope.warningTerm = "Our hamsters heard you say a poet, but aren't quite sure which one.";
+        return;
+      }
+
+      name = entities['poet_name']['value']
+      set_search_settings(name);
       $http.get('/poet/' + name, {}).then(function(result) {
         if (result.data.success) {
           $scope.searchTerm = 'Poet: ' + result.data.poet;
           var list = result.data.poems;
           if (list.length == 1) {
-            $scope.poem = list[0];
             $scope.hasPoem = true;
             $scope.hasList = false;
+            $scope.poem = list[0];
+            $scope.supplementaryInfo = $scope.poem.title;
           } else {
-            $scope.list = list;
             $scope.hasPoem = false;
             $scope.hasList = true;
+            $scope.list = list;
           }
         } else {
           $scope.warningTerm = "Our hamsters didn't find that poet. Please try again."
@@ -118,18 +108,17 @@ angular.module('Poetree', ['ui.bootstrap', 'poetreeServices', 'poetreeFilters'])
       });
     }
 
-    var do_select = function(entities, callback) {
+    var do_select = function(entities) {
       //select one of the options already presented on the poet page, if exist
       if (!$scope.hasList) {
         return;
-      }
-      if ($scope.hasList && 'number' in entities) {
-        $scope.poem = $scope.list[entities['number']['value'] - 1];
-        $scope.searchTerm = 'Poem: ' + $scope.poem.title;
+      } else if ('number' in entities) {
         $scope.hasList = false;
         $scope.hasPoem = true;
         $scope.hasBack = true;
-      } else if ($scope.hasList) {
+        $scope.poem = $scope.list[entities['number']['value'] - 1];
+        $scope.searchTerm = 'Poem: ' + $scope.poem.title;
+      } else {
         $scope.warningTerm = "Sorry, our hamsters are bad with numbers. Please repeat that.";
       }
     }
@@ -152,12 +141,6 @@ angular.module('Poetree', ['ui.bootstrap', 'poetreeServices', 'poetreeFilters'])
       $scope.hasInstructions = true;
       $scope.searchTerm = $scope.greeting;
       $scope.warning = '';
-    }
-
-    var do_unknown = function(callback) {
-      //tell user response not understood
-      $scope.warningTerm = "Our hamsters are hard of hearing. Do you mind trying again?"
-      $scope.searchTerm = $scope.greeting;
     }
 
     $scope.poemTextSanitize = function() {

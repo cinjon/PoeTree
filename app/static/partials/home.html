@@ -1,11 +1,3 @@
-<div id="instructions">
-  <button class="btn btn-sm btn-primary" id="instructions-toggle" ng-model="instructionToggle" ng-click="do_instructions()">Instructions</button>
-  <button class="btn btn-sm btn-primary" id="find-poet" ng-click="findPoet()">waltwhitman</button>
-  <button class="btn btn-sm btn-primary" id="find-poem" ng-click="findPoem()">ohcaptain</button>
-  <button class="btn btn-sm btn-primary" id="back" ng-click="do_back()">back</button>
-  <button class="btn btn-sm btn-primary" id="select1" ng-click="select(1)">select</button>
-</div>
-
 <div class="row search-row" ng-show="!hasVoice">
   <p>No Voice</p>
 </div>
@@ -16,17 +8,34 @@
     <div class="form-control search" ng-class="{communicate:isGreeting}">
       {{searchTerm | title}}
     </div>
-    <p class="warningTerm">{{warningTerm}}</p>
+    <p class="warning">{{warningTerm}}</p>
   </div>
 
   <div class="content-text">
     <div ng-show="hasInstructions" class="instructions">
-      <p class="instruction-line">This is an experiment to see what the future feels like.</p>
-      <p class="instruction-line">Speak your favorite poet: <span class="communicate">Poet Robert Frost</span></p>
-      <p class="instruction-line">Speak your favorite poem: <span class="communicate">Poem Oh Captain My Captain</span></p>
-      <p class="instruction-line">See the instructions again? <span class="communicate">Show Instructions</span></p>
+      <div class="row">
+        <div class="col-xs-8 col-xs-offset-3">
+          <p class="instruction-line">This is an experiment to see what the future feels like.</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-8 col-xs-offset-3">
+          <p class="instruction-line">Speak your favorite poet: <span class="communicate">Poet Robert Frost</span></p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-8 col-xs-offset-3">
+          <p class="instruction-line">Speak your favorite poem: <span class="communicate">Poem Oh Captain My Captain</span></p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-8 col-xs-offset-3">
+          <p class="instruction-line">See the instructions again? <span class="communicate">Show Instructions</span></p>
+        </div>
+      </div>
     </div>
 
+    <div ng-show="hasPoem" class="supplementary-info">{{supplementaryInfo}}</div>
     <div ng-show="hasPoem" class="poem-text" ng-bind-html="poemTextSanitize()"></div>
 
     <div ng-show="hasList">
