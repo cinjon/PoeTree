@@ -1,82 +1,70 @@
+body {
+   font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+   font-weight: 300;
+}
+
 .page {
-    width:60%;
-    margin:auto;
+    margin-top:20px;
+}
+
+.communicate {
+    color: rgba(9, 14, 207, .5);
+}
+
+.content {
+    height: 650px;
+    padding-top:50px;
+    width: 900px;
+    margin: auto;
+}
+
+.content-text {
+    margin-top:25px;
+    height: 605px;
+    font-size: 20px;
+}
+
+#instructions {
+    height:50px;
+    display:none;
+    /* visibility:none; */
+}
+
+.instructions {
+    margin-top:80px;
+}
+
+.instruction-line {
+    height:35px;
+    text-align:center;
 }
 
 .search {
     text-align:center;
-    height:40px;
-    font-size:20px;
+    height: 50px;
+    font-size:25px;
+    cursor: none;
+    border-color: rgba(9, 194, 207, .5);
 }
 
-.search-row {
-    margin-top:50px;
-}
-
-.center {
-    width:60%;
-    margin:auto;
-}
-
-.list-poem {
+.poem-line {
     clear:both;
-    margin-bottom:20px;
+    height:45px;
+}
+
+.poem-text {
+    height:100%;
+    overflow:scroll;
 }
 
 .list-index {
-    font-size:20px;
+    width: 115px;
     float: left;
 }
 
 .list-title {
-    font-size:20px;
     float:left;
-    margin-left:30px;
-}
-
-.main {
-    padding-top: 20px;
-
-    min-height: 610px;
-}
-
-.footer-left {
-    float: left;
-}
-
-.footer-right {
-    float: right;
-}
-
-.active {
-  background-color: #C44741;
-  color: #f2f2f2;
-}
-
-.text-center {
-    text-align:center;
-}
-
-.typeahead-input {
-    border-radius: 20px;
-    width:100%;
-}
-
-.wide-input {
-    width: 450px;
-}
-
-.half-wide-input {
-    width: 250px;
-}
-
-.small-input {
-    width: 110px;
-}
-
-.scroll {
-    overflow:scroll;
-    height:610px;
+    margin-left:60px;
 }
 
 .ellipsis {

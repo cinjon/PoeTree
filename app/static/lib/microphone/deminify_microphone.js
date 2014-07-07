@@ -45,11 +45,6 @@
     }, this.mkactive = function () {
       return this.elem ? this.elem.classList.add("active") : void 0
     }, this.mkthinking = function () {
-      var a, b, d, e, f, g, h, i, j, k, l, m, n, o = this;
-      return this.thinking = !0, this.elem ? (i = getComputedStyle(c), console.log(i), this.elem.classList.add("thinking"), l = parseInt(i.width, 10), f = parseInt(i.height, 10), b = "border-box" === i.boxSizing ? parseInt(i.borderTopWidth, 10) : 0, g = l / 2 - b - 5, a = 1e3, d = l / 2 - b, e = f / 2 - b - g, m = 0, j = 1, h = (null != (n = window.performance) ? n.now() : void 0) || new Date, k = function (c) {
-        var i, n, p, q;
-        return n = (c - h) % a / a * 2 * Math.PI - Math.PI / 2, p = Math.cos(n) * g + l / 2 - b, q = Math.sin(n) * g + f / 2 - b, i = +(1.5 * Math.PI > n && n > Math.PI / 2), o.path.setAttribute("d", "M" + d + "," + e + "A" + g + "," + g + "," + m + "," + i + "," + j + "," + p + "," + q), o.thinking ? requestAnimationFrame(k) : (o.elem.classList.remove("thinking"), o.path.setAttribute("d", "M0,0"))
-      }, requestAnimationFrame(k)) : void 0
     }, this.rmthinking = function () {
       return this.thinking = !1
     }, this

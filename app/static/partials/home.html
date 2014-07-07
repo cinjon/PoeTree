@@ -1,42 +1,42 @@
-<p>Instructions</p>
-<pre id="instructions">
-  <p>
-</pre>
-<div id="info"></div>
-
-<div ng-show="hasVoice">
-  <div class="row search-row">
-    <div class="col-xs-12">
-      <div id="microphone"></div>
-      <input class="search form-control" ng-model="warning">
-      <input class="search form-control" placeholder="Speak for Poems" ng-model="searchTerm">
-    </div>
-  </div>
+<div id="instructions">
+  <button class="btn btn-sm btn-primary" id="instructions-toggle" ng-model="instructionToggle" ng-click="do_instructions()">Instructions</button>
+  <button class="btn btn-sm btn-primary" id="find-poet" ng-click="findPoet()">waltwhitman</button>
+  <button class="btn btn-sm btn-primary" id="find-poem" ng-click="findPoem()">ohcaptain</button>
+  <button class="btn btn-sm btn-primary" id="back" ng-click="do_back()">back</button>
+  <button class="btn btn-sm btn-primary" id="select1" ng-click="select(1)">select</button>
 </div>
 
 <div class="row search-row" ng-show="!hasVoice">
   <p>No Voice</p>
 </div>
 
-<div id="content" class="main">
-  <div ng-show="hasPoem">
-    <div id="title">
-      {{poem.title}}
+<div class="content" ng-show="hasVoice">
+  <div class="search-row">
+    <div id="microphone"></div>
+    <div class="form-control search" ng-class="{communicate:isGreeting}">
+      {{searchTerm | title}}
     </div>
-    <div id="author">
-      {{poet.name}}
-    </div>
-    <div id="text" ng-bind-html="poemTextSanitize()">
-    </div>
+    <p class="warningTerm">{{warningTerm}}</p>
   </div>
 
-  <div ng-show="hasList">
-    <div class="list-poem" ng-repeat="poem in list track by $index">
-      <div class="list-index">
-        {{$index+1}}
-      </div>
-      <div class="list-title">
-        {{poem.title}}
+  <div class="content-text">
+    <div ng-show="hasInstructions" class="instructions">
+      <p class="instruction-line">This is an experiment to see what the future feels like.</p>
+      <p class="instruction-line">Speak your favorite poet: <span class="communicate">Poet Robert Frost</span></p>
+      <p class="instruction-line">Speak your favorite poem: <span class="communicate">Poem Oh Captain My Captain</span></p>
+      <p class="instruction-line">See the instructions again? <span class="communicate">Show Instructions</span></p>
+    </div>
+
+    <div ng-show="hasPoem" class="poem-text" ng-bind-html="poemTextSanitize()"></div>
+
+    <div ng-show="hasList">
+      <div class="poem-line" ng-repeat="poem in list track by $index">
+        <div class="list-index communicate">
+          Select {{$index+1 | numToStr}}
+        </div>
+        <div class="list-title">
+          {{poem.title}}
+        </div>
       </div>
     </div>
   </div>
