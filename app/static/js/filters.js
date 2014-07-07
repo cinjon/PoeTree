@@ -18,15 +18,18 @@ angular.module('poetreeFilters', [])
   })
   .filter('title', function() {
     return function(input) {
-      console.log(input);
-      parts = input.toLowerCase().split(' ');
-      for (var index in parts) {
-        part = parts[index];
-        if (part == '') {
-          continue;
-        }
-        parts[index] = part.slice(0, 1).toUpperCase() + part.slice(1);
+      if (!input) {
+        return '';
       }
-      return parts.join(' ');
+      return input.split(' ').map(function(x) {return x[0].toUpperCase() + x.slice(1)}).join(' ')
+    }
+  })
+  .filter('numToStr', function() {
+    dict = {1:'One', 2:'Two', 3:'Three', 4:'Four', 5:'Five'}
+    return function(input) {
+      if (input in dict) {
+        return dict[input];
+      }
+      return '?';
     }
   });
