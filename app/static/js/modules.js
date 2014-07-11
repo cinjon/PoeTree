@@ -7,7 +7,7 @@ angular.module('Poetree', ['ui.bootstrap', 'poetreeServices', 'poetreeFilters'])
   .controller('home', function($scope, $sanitize, $http, $location, $timeout) {
     $scope.greeting = "PoeTree";
     $scope.searchTerm = $scope.greeting;
-    $scope.hasInstructions = true;
+    $scope.hasHelp = true;
     $scope.hasVoice = hasGetUserMedia();
     $scope.hasBack = false;
     $scope.isGreeting = function() {
@@ -32,92 +32,65 @@ angular.module('Poetree', ['ui.bootstrap', 'poetreeServices', 'poetreeFilters'])
     mic.onresult = function(intent, entities) {
       console.log(intent);
       console.log(entities);
-      if (intent == 'poet') {
-        do_search_poet(entities, $scope);
-      } else if (intent == 'poem') {
-        do_search_poem(entities);
-      } else if (intent == 'select') {
-        do_select(entities);
+      if (intent == 'choose') {
+        do_choose(entities);
+      } else if (intent == 'find') {
+        do_find(entities);
       } else if (intent == 'back') {
         do_back();
-      } else if (intent == 'instructions') {
-        do_instructions();
+      } else if (intent == 'help') {
+        do_help();
       }
     }
     mic.connect('X4HVIEQCOLHU6VMRWJAEL5QM27OGGZSW');
 
-    var set_search_settings = function(name) {
+    var set_result_settings = function(name) {
       $scope.searchTerm = name;
       $scope.warningTerm = '';
-      $scope.hasInstructions = false;
+      $scope.hasHelp = false;
+    }
+    var set_has_settings = function(searchedObj, list, back) {
+      $scope.hasSearchedObj = searchedObj;
+      $scope.hasList = list;
+      $scope.hasBack = back;
     }
 
-    var do_search_poem = function(entities) {
-      if (!('poem_name' in entities)) {
-        $scope.warningTerm = "Our hamsters heard you say a poem, but aren't quite sure which one.";
-        return;
-      }
-
-      name = entities['poem_name']['value']
-      set_search_settings(name);
-      $http.get('/poem/' + name, {}).then(function(result) {
-        if (result.data.success == 'single') {
-          $scope.poem = result.data.poems[0];
-          $scope.hasPoem = true;
-          $scope.hasList = false;
-          $scope.hasBack = false;
-          $scope.searchTerm =  'Poem: ' + $scope.poem.title;
-          $scope.supplementaryInfo = $scope.poem.poet;
-        } else if (result.data.success == 'list') {
-          $scope.list = result.data.poems;
-          $scope.hasPoem = false;
-          $scope.hasList = true;
-          $scope.hasBack = false;
-          $scope.searchTerm = 'Poem: ' + name;
-        } else {
-          $scope.warningTerm = "Our hamsters didn't find that poem. Please try again."
+    var do_find = function(entities) {
+      name = entities['find']['value']
+      set_result_settings(name);
+      $http.get('/find/' + name, {}).then(function(result) {
+        // Return results could be a list of poems and poets, at most five of each:
+        // [{text:"", name:"", type:"poem", poet:"by <Poet>"}, ..., {type:"poet", poems:[{...}], name:", extra:"# Poems"}]
+        // Or a single poem or a single poet (which will have a list of poems)
+        if (!result.data.success) {
+          $scope.warningTerm = "Our hamsters didn't find any results. Please try again."
+        } else if (result.data.type == 'single-poem') {
+          var poem = result.data.poem;
+          $scope.searchedObj = poem;
+          set_has_settings(true, false, false);
+        } else if (result.data.type == 'single-poet') {
+          var poet = result.data.poet;
+          $scope.searchedObj = poet;
+          $scope.list = poet.poems;
+          set_has_settings(true, true, false);
+        } else if (result.data.type == 'multi') {
+          $scope.list = result.data.poems.concat(result.data.poets);
+          set_has_settings(false, true, false);
         }
       });
     }
 
-    var do_search_poet = function(entities, $scope) {
-      if (!('poet_name' in entities)) {
-        $scope.warningTerm = "Our hamsters heard you say a poet, but aren't quite sure which one.";
-        return;
-      }
-
-      name = entities['poet_name']['value']
-      set_search_settings(name);
-      $http.get('/poet/' + name, {}).then(function(result) {
-        if (result.data.success) {
-          $scope.searchTerm = 'Poet: ' + result.data.poet;
-          var list = result.data.poems;
-          if (list.length == 1) {
-            $scope.hasPoem = true;
-            $scope.hasList = false;
-            $scope.poem = list[0];
-            $scope.supplementaryInfo = $scope.poem.title;
-          } else {
-            $scope.hasPoem = false;
-            $scope.hasList = true;
-            $scope.list = list;
-          }
-        } else {
-          $scope.warningTerm = "Our hamsters didn't find that poet. Please try again."
-        }
-      });
-    }
-
-    var do_select = function(entities) {
-      //select one of the options already presented on the poet page, if exist
+    var do_choose = function(entities) {
+      //choose one of the options already presented on the poet page, if exist
       if (!$scope.hasList) {
         return;
       } else if ('number' in entities) {
+        var number = entities['number']['value'] - 1;
+        var listEntity = $scope.list[number];
         $scope.hasList = false;
-        $scope.hasPoem = true;
         $scope.hasBack = true;
-        $scope.poem = $scope.list[entities['number']['value'] - 1];
-        $scope.searchTerm = 'Poem: ' + $scope.poem.title;
+        $scope.hasSearchedObj = true;
+        $scope.searchedObj = listEntity;
       } else {
         $scope.warningTerm = "Sorry, our hamsters are bad with numbers. Please repeat that.";
       }
@@ -127,25 +100,30 @@ angular.module('Poetree', ['ui.bootstrap', 'poetreeServices', 'poetreeFilters'])
       //return back from poem page to poet page
       if ($scope.hasBack) {
         $scope.searchTerm = $scope.greeting;
-        $scope.warning = '';
+        $scope.warningTerm = '';
         $scope.hasList = true;
-        $scope.hasPoem = false;
+        $scope.hasSearchedObj = false;
         $scope.hasBack = false;
       }
     }
 
-    var do_instructions = function() {
+    var do_help = function() {
       $scope.hasList = false;
-      $scope.hasPoem = false;
+      $scope.hasSearchedObj = false;
       $scope.hasBack = false;
-      $scope.hasInstructions = true;
+      $scope.hasHelp = true;
       $scope.searchTerm = $scope.greeting;
-      $scope.warning = '';
+      $scope.warningTerm = '';
+    }
+
+    $scope.hasPoem = function() {
+      return $scope.hasSearchedObj && $scope.hasSearchedObj.type == "poem";
     }
 
     $scope.poemTextSanitize = function() {
-      if ($scope.hasPoem) {
-        return $sanitize($scope.poem.text);
+      //Sanitize text for poems
+      if ($scope.hasPoem()) {
+        return $sanitize($scope.hasSearchedObj.text);
       }
     };
   })

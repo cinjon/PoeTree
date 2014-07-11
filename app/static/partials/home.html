@@ -12,39 +12,44 @@
   </div>
 
   <div class="content-text">
-    <div ng-show="hasInstructions" class="instructions">
+    <div ng-show="hasHelp" class="instructions">
       <div class="row">
-        <div class="col-xs-8 col-xs-offset-3">
+        <div class="col-xs-8">
           <p class="instruction-line">This is an experiment to see what the future feels like.</p>
         </div>
       </div>
       <div class="row">
         <div class="col-xs-8 col-xs-offset-3">
-          <p class="instruction-line">Speak your favorite poet: <span class="communicate">Poet Robert Frost</span></p>
+          <p class="instruction-line">Speak your favorite poet: <span class="communicate">Robert Frost</span></p>
         </div>
       </div>
       <div class="row">
         <div class="col-xs-8 col-xs-offset-3">
-          <p class="instruction-line">Speak your favorite poem: <span class="communicate">Poem Oh Captain My Captain</span></p>
+          <p class="instruction-line">Speak your favorite poem: <span class="communicate">Oh Captain My Captain</span></p>
         </div>
       </div>
       <div class="row">
         <div class="col-xs-8 col-xs-offset-3">
-          <p class="instruction-line">See the instructions again? <span class="communicate">Show Instructions</span></p>
+          <p class="instruction-line">See the instructions again? <span class="communicate">Help</span></p>
         </div>
       </div>
     </div>
 
-    <div ng-show="hasPoem" class="supplementary-info">{{supplementaryInfo}}</div>
-    <div ng-show="hasPoem" class="poem-text" ng-bind-html="poemTextSanitize()"></div>
+    <div ng-show="hasPoem()" class="supplementary-info">{{searchedObj.poet}}</div>
+    <div ng-show="hasPoem()" class="poem-text" ng-bind-html="poemTextSanitize()"></div>
 
     <div ng-show="hasList">
-      <div class="poem-line" ng-repeat="poem in list track by $index">
+      <div class="searchedObj-line" ng-repeat="obj in list track by $index">
         <div class="list-index communicate">
-          Select {{$index+1 | numToStr}}
+          Choose {{$index+1 | numToStr}}
         </div>
-        <div class="list-title">
-          {{poem.title}}
+        <div class="list-info" ng-class="colorClass(obj.type)">
+          <div class="list-name">
+            {{obj.name}}
+          </div>
+          <div class="list-extra">
+            {{obj.extra}}
+          </div>
         </div>
       </div>
     </div>

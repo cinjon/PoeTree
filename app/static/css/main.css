@@ -40,7 +40,7 @@ body {
     border-color: rgba(9, 194, 207, .5);
 }
 
-.poem-line {
+.searchedObj-line {
     clear:both;
     height:45px;
 }
@@ -64,7 +64,7 @@ body {
     float: left;
 }
 
-.list-title {
+.list-info {
     float:left;
     margin-left:60px;
 }
