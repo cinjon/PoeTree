@@ -65,10 +65,17 @@ angular.module('Poetree', ['ui.bootstrap', 'poetreeServices', 'poetreeFilters'])
       $scope.hasDiscover = hasDiscover;
     }
     settings_notify($scope.greeting, '');
-    settings_layout(false, false, false, false, true);
+    settings_layout(false, false, false, true, false);
 
     var do_find = function(entities) {
-      name = entities['find']['value']
+      if ('poet' in entities) {
+        name = entities['poet']['value']
+      } else if ('poem' in entities) {
+        name = entities['poem']['value']
+      } else {
+        return;
+      }
+
       settings_notify(name, '');
       $http.get('/find/' + name, {}).then(function(result) {
         // Return results could be a list of poems and poets, at most five of each:
@@ -79,6 +86,7 @@ angular.module('Poetree', ['ui.bootstrap', 'poetreeServices', 'poetreeFilters'])
         } else if (result.data.type == 'single-poem') {
           var poem = result.data.poem;
           $scope.searchedObj = poem;
+          $scope.searchedObj.type = 'poem';
           settings_layout(true, false, false, false, false);
         } else if (result.data.type == 'single-poet') {
           var poet = result.data.poet;
@@ -130,13 +138,13 @@ angular.module('Poetree', ['ui.bootstrap', 'poetreeServices', 'poetreeFilters'])
     }
 
     $scope.hasPoem = function() {
-      return $scope.hasSearchedObj && $scope.hasSearchedObj.type == "poem";
+      return $scope.hasSearchedObj && $scope.searchedObj.type == "poem";
     }
 
     $scope.poemTextSanitize = function() {
       //Sanitize text for poems
       if ($scope.hasPoem()) {
-        return $sanitize($scope.hasSearchedObj.text);
+        return $sanitize($scope.searchedObj.text);
       }
     };
   })
