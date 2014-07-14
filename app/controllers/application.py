@@ -22,6 +22,20 @@ def page_not_found(e):
 def basic_pages(**kwargs):
     return make_response(open('app/public/template/index.html').read())
 
+@app.flask_app.route('/poetnames')
+def poetnames():
+    return app.utility.xhr_response(
+        {'names':[{'name':p.get_name()} for p in sorted(
+            app.models.Poet.query.all(), key=lambda p:len(p.name))]},
+        200)
+
+@app.flask_app.route('/poemnames')
+def poemnames():
+    return app.utility.xhr_response(
+        {'names':[{'title':p.get_title()} for p in sorted(
+            app.models.Poem.query.all(), key=lambda p:len(p.title), reverse=True)]},
+        200)
+
 @app.flask_app.route('/find/<query>')
 def find(query):
     # We got a query that could be a poem or a poet. It could also be a fragment
