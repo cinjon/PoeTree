@@ -14,7 +14,7 @@ body {
 .content {
     height: 650px;
     padding-top:50px;
-    width: 900px;
+    width: 960px;
     margin: auto;
 }
 
@@ -30,6 +30,15 @@ body {
 
 .instruction-line {
     height:35px;
+}
+
+.discover-line {
+    height:27px;
+}
+
+.discover {
+    font-size: 17px;
+    margin-top:80px;
 }
 
 .search {
@@ -74,6 +83,10 @@ body {
     text-overflow:    ellipsis;   /* IE, Safari (WebKit) */
     overflow:hidden;              /* don't show excess chars */
     white-space:nowrap;           /* force single line */
+}
+
+.text-align-right {
+    text-align:right;
 }
 
 /* For Angular-UI Bootstrap */
