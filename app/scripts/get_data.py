@@ -74,11 +74,7 @@ def make_poem(soup, audio, title, poet, ty):
 def has_poem(title, poet_id):
     return app.models.Poem.query.filter(app.models.Poem.title == title, app.models.Poem.poet_id==poet_id).count() > 0
 
-def get_poems_from_foundation(poems):
-    # poems is a list of poem ids, e.g. 173742 --> Ode on a Grecian Urn
-    baseurl = 'http://www.poetryfoundation.org/poem/'
-    urls = [baseurl + str(poem) for poem in poems]
-    ty = 'foundation'
+def _get_poems(poems, ty):
     for url in urls:
         soup = bs4.BeautifulSoup(urllib2.urlopen(urllib2.Request(url)))
         poet = get_poet(soup, ty)
@@ -93,20 +89,14 @@ def get_poems_from_foundation(poems):
         make_poem(soup, audio, title, poet, ty)
     app.db.session.commit()
 
+def get_poems_from_foundation(poems):
+    # poems is a list of poem ids, e.g. 173742 --> Ode on a Grecian Urn
+    baseurl = 'http://www.poetryfoundation.org/poem/'
+    urls = [baseurl + str(poem) for poem in poems]
+    _get_poems(poems, 'foundation')
+
 def get_poems_from_poemhunter(poems):
     # poems is a list of poem routes, e.g. d-jeuner-du-matin --> Dejeuner du matin
     baseurl = 'http://www.poemhunter.com/poem/'
     urls = [baseurl + str(poem) for poem in poems]
-    ty = 'hunter'
-    for url in urls:
-        soup = bs4.BeautifulSoup(urllib2.urlopen(urllib2.Request(url)))
-        poet = get_poet(soup, ty)
-        if not poet:
-            print "Continuing, no poet in %s" % url
-            continue
-        title = get_title(soup, ty)
-        if has_poem(title, poet.id):
-            print "Already have %s from %s" % (title, poet.name)
-            continue
-        make_poem(soup, None, title, poet, ty)
-    app.db.session.commit()
+    _get_poems(poems, 'hunter')
