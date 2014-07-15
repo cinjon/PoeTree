@@ -37,12 +37,14 @@ angular.module('Poetree', ['ui.bootstrap', 'poetreeServices', 'poetreeFilters'])
     mic.onresult = function(intent, entities) {
       console.log(intent);
       console.log(entities);
-      if (intent == 'choose') {
+      if (intent == 'back') {
+        do_back();
+      } else if (intent == 'choose') {
         do_choose(entities);
+      } else if (intent == 'discover') {
+        do_discover();
       } else if (intent == 'find') {
         do_find(entities);
-      } else if (intent == 'back') {
-        do_back();
       } else if (intent == 'help') {
         do_help();
       } else if (intent == 'scroll') {
@@ -171,3 +173,5 @@ function hasGetUserMedia() {
   return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
             navigator.mozGetUserMedia || navigator.msGetUserMedia);
 }
+
+function mic() {
