@@ -7,7 +7,6 @@ find_limit = 5
 # special file handlers and error handlers
 @app.flask_app.route('/favicon.ico')
 def favicon():
-    print app.flask_app.root_path
     return send_from_directory(os.path.join(app.flask_app.root_path, 'static'),
            'img/favicon.ico')
 
@@ -66,7 +65,7 @@ def find(query):
         ret['success'] = True
         ret['poems'] = [p.display() for p in poems[:find_limit]]
         ret['poets'] = [p.display() for p in poets[:find_limit]]
-        ret['type'] = ret['multi']
+        ret['type'] = 'multi'
         return app.utility.xhr_response(ret, 200)
 
     ret = {'success':False}
@@ -75,6 +74,4 @@ def find(query):
 def get_matching(objs, query):
     # Given a list of objs (poems or poets), get those that match the query
     # Return them in order of matching score
-    matching = [(p, score) for p,score in [p.check_match(query) for p in objs] if score > 0]
-    print matching
-    return [p for p,score in sorted(matching, key=lambda k:k[1], reverse=True)]
+    return [p for p,score in sorted([(p, p.check_match(query)) for p in objs], key=lambda k:k[1], reverse=True) if score > 0]

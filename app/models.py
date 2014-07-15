@@ -66,12 +66,11 @@ class Poem(db.Model):
         return check_match(self.title, query)
 
     def display(self):
-        return {'text':format_to_css(self.text), 'title':self.get_title(), 'youtube':self.youtube, 'audio':self.audio, 'poet':Poet.query.get(self.poet_id).get_name()}
+        return {'text':format_to_css(self.text), 'title':self.get_title(), 'youtube':self.youtube, 'audio':self.audio, 'poet':Poet.query.get(self.poet_id).get_name(), 'type':'poem'}
 
 def create_poem(title, text, youtube, audio, poet_id):
     poet = Poet.query.get(poet_id)
     if not poet:
-        print "No Poet"
         return
     poem = Poem(title, text, youtube, audio)
     poet.poems.append(poem)
@@ -80,7 +79,7 @@ def create_poem(title, text, youtube, audio, poet_id):
     return poem
 
 def format_to_css(text):
-    parts = [p for p in text.strip('\n').split('\n')]
+    parts = [p.strip() for p in text.strip('\n').split('\n')]
     for num,p in enumerate(parts):
         if p == '':
             continue
@@ -95,10 +94,7 @@ def check_match(phrase, query):
     # Check to see if query matches phrase in some way, e.g.
     # query="john" matches on phrase={"john keats", "mr john", "john goes to washington"}
     # query="john doe" matches on phrase="john keats" with low score and "john do" with higher score
-    # scoring: match on entire query = 1, match on entire query starting at beginning, return 1.5, match on some part of query equal to percentage of query matched, return that percentage (< 1)
     if query in phrase:
-        if phrase[:len(query)] == query:
-            return 1.5
-        return 1
-    numchars = sum([len(i) for i in set(query.split(' ')) if i in phrase]) #made it a set so that something with repeated terms like "the" doesn't get abused. should do something smarter... like a real search algo
+        return 1.0*len(query)/len(phrase)
+    numchars = sum([len(i) for i in set(query.split(' ')) if len(i) > 2 and i in phrase]) #made it a set so that something with repeated terms like "the" doesn't get abused. should do something smarter... like a real search algo
     return 1.0*numchars/len(query)
