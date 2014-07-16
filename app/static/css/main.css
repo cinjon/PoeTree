@@ -14,7 +14,7 @@ body {
 .content {
     height: 650px;
     padding-top:50px;
-    width: 960px;
+    width: 980px;
     margin: auto;
 }
 
@@ -22,6 +22,16 @@ body {
     margin-top:25px;
     height: 605px;
     font-size: 20px;
+}
+
+.back-button {
+    visibility:hidden;
+    max-width:56px;
+    float:left;
+}
+
+.visible {
+    visibility:visible;
 }
 
 .instructions {
@@ -39,6 +49,10 @@ body {
 .discover {
     font-size: 17px;
     margin-top:80px;
+}
+
+.search-term {
+    margin-right:56px;
 }
 
 .search {
