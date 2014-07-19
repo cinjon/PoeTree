@@ -8,6 +8,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
   })
   .controller('home', function($scope, $sanitize, $http, $location, $timeout) {
     $scope.greeting = "PoeTree";
+    $scope.instructions = getInstructions();
     $scope.hasVoice = hasGetUserMedia();
     $scope.isGreeting = function() {
       //Check if the search term in the box is the greeting
@@ -16,12 +17,15 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
     $scope.hasPoem = function() {
       return $scope.hasSearchedObj && $scope.searchedObj.type == "poem";
     }
-    $scope.poemTextSanitize = function() {
-      //Sanitize text for poems
-      if ($scope.hasPoem()) {
-        return $sanitize($scope.searchedObj.text);
+    $scope.hasPoemAudio = function() {
+      return $scope.hasPoem() && $scope.hasSearchedObj.audio != null;
+    }
+
+    $scope.sanitize = function(txt) {
+      if (txt) {
+        return $sanitize(txt);
       }
-    };
+    }
 
     //Get the poet and poem names
     $http.get('/poetnames', {}).then(function(result) {
@@ -50,6 +54,8 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
       $scope.searchedObj = poem;
       settings_layout(true, false, false, false, false);
       settings_notify(poem.title, '');
+      $scope.hasBack = true;
+      $scope.hasAudio = true;
     }
     function set_poet(poet) {
       if (poet.poems.length == 1) {
@@ -89,6 +95,8 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
         do_find(entities, res);
       } else if (intent == 'help') {
         do_help();
+      } else if (intent == 'play') {
+        do_play();
       } else if (intent == 'random') {
         do_random();
       } else if (intent == 'scroll') {
@@ -172,15 +180,23 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
       settings_layout(false, false, false, true, false);
     }
 
+    function do_play() {
+      if ($scope.hasPoemAudio()) {
+        //Play Audio
+      }
+    }
+
     function do_random() {
       $http.get('/randompoem', {}).then(function(result) {
         if (!result.data.success) {
           $scope.warningTerm = "Oh no, there was an error. Please try again."
         } else {
+          console.log(result.data.poem);
           set_poem(result.data.poem);
         }
       });
     }
+    do_random();
 
     function do_scroll(entities) {
       //Scroll in some direction. Uses 'on' for down, 'off' for up
@@ -215,4 +231,15 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
 function hasGetUserMedia() {
   return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
             navigator.mozGetUserMedia || navigator.msGetUserMedia);
+}
+
+function getInstructions() {
+  return [
+    'This is an experiment to see what the future feels like.',
+    'Speak your favorite poet: <span class="communicate">Robert Frost</span>',
+    'Speak your favorite poem: <span class="communicate">Oh Captain My Captain</span>',
+    'Discover our poets and poems: <span class="communicate">List</span>',
+    'Find a <span class="communicate">Random</span> poem',
+    'See the instructions again? <span class="communicate">Help</span>',
+  ]
 }

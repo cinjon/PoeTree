@@ -6,11 +6,14 @@
   <div class="search-row">
     <div id="microphone"></div>
     <div class="form-control search" ng-class="{communicate:isGreeting}">
-      <div class="back-button" ng-class="{visible:hasBack}">
+      <div class="search-button" ng-class="{visible:hasBack}">
         Back
       </div>
       <div class="search-term">
         {{searchTerm | title}}
+      </div>
+      <div class="search-button" ng-class="{visible:hasAudio}">
+        Play
       </div>
     </div>
     <p class="warning">{{warningTerm}}</p>
@@ -18,35 +21,17 @@
 
   <div class="content-text">
     <div ng-show="hasHelp" class="instructions">
-      <div class="row">
+      <div class="row" ng-repeat="instruction in instructions">
         <div class="col-xs-8 col-xs-offset-3">
-          <p class="instruction-line">This is an experiment to see what the future feels like.</p>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-xs-8 col-xs-offset-3">
-          <p class="instruction-line">Speak your favorite poet: <span class="communicate">Robert Frost</span></p>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-xs-8 col-xs-offset-3">
-          <p class="instruction-line">Speak your favorite poem: <span class="communicate">Oh Captain My Captain</span></p>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-xs-8 col-xs-offset-3">
-          <p class="instruction-line">Discover our poets and poems: <span class="communicate">List</span></p>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-xs-8 col-xs-offset-3">
-          <p class="instruction-line">See the instructions again? <span class="communicate">Help</span></p>
+          <p class="instruction-line" ng-bind-html="sanitize(instruction)"></p>
         </div>
       </div>
     </div>
 
-    <div ng-show="hasPoem()" class="supplementary-info">{{searchedObj.poet}}</div>
-    <div ng-show="hasPoem()" class="poem-text" ng-bind-html="poemTextSanitize()"></div>
+    <div ng-show="hasPoem()">
+      <div class="supplementary-info">{{searchedObj.poet}}</div>
+      <div class="poem-text" ng-bind-html="sanitize(searchedObj.text)"></div>
+    </div>
 
     <div ng-show="hasDiscover">
       <div class="communicate discover">
