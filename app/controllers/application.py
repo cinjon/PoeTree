@@ -1,6 +1,8 @@
 import app
 import os
 from flask import send_from_directory, render_template, make_response
+from  sqlalchemy.sql.expression import func, select
+import random
 
 find_limit = 5
 
@@ -34,6 +36,15 @@ def poemnames():
         {'names':[{'title':p.get_title()} for p in sorted(
             app.models.Poem.query.all(), key=lambda p:len(p.title), reverse=True)]},
         200)
+
+@app.flask_app.route('/randompoem')
+def randompoem():
+    p = app.models.Poem.query.order_by(func.random()).first() #Get random poem
+    if not p:
+        return app.utility.xhr_response(
+            {'success':False}, 400)
+    return app.utility.xhr_response(
+        {'success':True, 'poem':p.display()}, 200)
 
 @app.flask_app.route('/find/<query>')
 def find(query):

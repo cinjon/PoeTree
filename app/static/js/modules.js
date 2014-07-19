@@ -77,6 +77,8 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
       console.log("Error: " + err);
     };
     mic.onresult = function(intent, entities, res) {
+      console.log(intent);
+      console.log(res);
       if (intent == 'back') {
         do_back();
       } else if (intent == 'choose') {
@@ -87,6 +89,8 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
         do_find(entities, res);
       } else if (intent == 'help') {
         do_help();
+      } else if (intent == 'random') {
+        do_random();
       } else if (intent == 'scroll') {
         do_scroll(entities);
       }
@@ -166,6 +170,16 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
     function do_help() {
       settings_notify($scope.greeting, '');
       settings_layout(false, false, false, true, false);
+    }
+
+    function do_random() {
+      $http.get('/randompoem', {}).then(function(result) {
+        if (!result.data.success) {
+          $scope.warningTerm = "Oh no, there was an error. Please try again."
+        } else {
+          set_poem(result.data.poem);
+        }
+      });
     }
 
     function do_scroll(entities) {

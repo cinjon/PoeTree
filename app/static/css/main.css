@@ -14,7 +14,7 @@ body {
 .content {
     height: 650px;
     padding-top:50px;
-    width: 980px;
+    width: 900px;
     margin: auto;
 }
 
@@ -28,6 +28,9 @@ body {
     visibility:hidden;
     max-width:56px;
     float:left;
+    font-size:18px;
+    position:relative;
+    top:6px;
 }
 
 .visible {
@@ -75,11 +78,13 @@ body {
 
 .supplementary-info {
     text-align:right;
+    margin-right:5px;
 }
 
 .poem-text {
     height:95%;
     overflow:scroll;
+    margin-left:15px;
 }
 
 .list-index {
