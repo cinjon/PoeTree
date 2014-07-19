@@ -2,7 +2,7 @@
 
 var ms_wit_loop = 1200; //2000 works, but has a meh latency for users. 1500 is *ok*. 1200 is better.
 
-angular.module('Poetree', ['ui.bootstrap', 'poetreeServices', 'poetreeFilters'])
+angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
   .controller('about', function($scope) {
 
   })
