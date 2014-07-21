@@ -1,12 +1,14 @@
 'use strict';
 
-var ms_wit_loop = 1200; //2000 works, but has a meh latency for users. 1500 is *ok*. 1200 is better.
+var msWitLoop = 1200; //2000 works, but has a meh latency for users. 1500 is *ok*. 1200 is better.
+var scrollAmt = 280;
 
 angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
   .controller('about', function($scope) {
 
   })
   .controller('home', function($scope, $sanitize, $http, $location, $timeout) {
+    var scrollCounter = 0;
     $scope.greeting = "PoeTree";
     $scope.instructions = getInstructions();
     $scope.hasVoice = hasGetUserMedia();
@@ -42,17 +44,18 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
       $scope.searchTerm = searchTerm;
       $scope.warningTerm = warningTerm;
     }
-    function settings_layout(hasSearchedObj, hasList, hasBack, hasHelp, hasDiscover) {
+    function settings_layout(hasSearchedObj, hasList, hasBack, hasHelp, hasDiscover, hasAudio) {
       //Set layout settings
       $scope.hasSearchedObj = hasSearchedObj;
       $scope.hasList = hasList;
       $scope.hasBack = hasBack;
       $scope.hasHelp = hasHelp;
       $scope.hasDiscover = hasDiscover;
+      $scope.hasAudio = hasAudio;
     }
     function set_poem(poem) {
       $scope.searchedObj = poem;
-      settings_layout(true, false, false, false, false);
+      settings_layout(true, false, false, false, false, poem.audio != '');
       settings_notify(poem.title, '');
       $scope.hasBack = true;
       $scope.hasAudio = true;
@@ -63,12 +66,12 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
       } else {
         $scope.searchedObj = poet;
         $scope.list = poet.poems;
-        settings_layout(true, true, false, false, false);
+        settings_layout(true, true, false, false, false, false);
         settings_notify(poet.name, '');
       }
     }
     settings_notify($scope.greeting, '');
-    settings_layout(false, false, false, true, false);
+    settings_layout(false, false, false, true, false, false);
 
     var mic = new Wit.Microphone(document.getElementById("microphone"));
     mic.onready = function () {
@@ -77,7 +80,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
     mic.onaudiostart = function () {
       $timeout(function() {
         mic.stop()
-      }, ms_wit_loop)
+      }, msWitLoop)
     };
     mic.onerror = function (err) {
       console.log("Error: " + err);
@@ -100,7 +103,9 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
       } else if (intent == 'random') {
         do_random();
       } else if (intent == 'scroll') {
-        do_scroll(entities);
+        if ($scope.hasPoem()) {
+          do_scroll(entities);
+        }
       }
     }
     mic.connect('X4HVIEQCOLHU6VMRWJAEL5QM27OGGZSW');
@@ -109,7 +114,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
       //return back from poem page to poet page
       if ($scope.hasBack) {
         settings_notify($scope.greeting, '');
-        settings_layout(false, true, false, false, false);
+        settings_layout(false, true, false, false, false, false);
       }
     }
 
@@ -123,7 +128,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
           return;
         }
         $scope.searchedObj = $scope.list[number]
-        settings_layout(true, false, true, false, false);
+        settings_layout(true, false, true, false, false, false);
         settings_notify($scope.searchedObj.title, '');
       } else {
         $scope.warningTerm = "Sorry, our hamsters are bad with numbers. Please repeat that.";
@@ -132,7 +137,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
 
     function do_discover() {
       settings_notify($scope.greeting, '');
-      settings_layout(false, false, false, false, true);
+      settings_layout(false, false, false, false, true, false);
     }
 
     function do_find(entities, res) {
@@ -168,7 +173,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
               set_poet(result.data.poets[0]);
             }
           } else {
-            settings_layout(false, true, false, false, false);
+            settings_layout(false, true, false, false, false, false);
             settings_notify(name, '');
           }
         }
@@ -177,7 +182,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
 
     function do_help() {
       settings_notify($scope.greeting, '');
-      settings_layout(false, false, false, true, false);
+      settings_layout(false, false, false, true, false, false);
     }
 
     function do_play() {
@@ -200,13 +205,22 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
 
     function do_scroll(entities) {
       //Scroll in some direction. Uses 'on' for down, 'off' for up
-      //TODO: Doesn't quite work yet
-      direction = entities['scroll']['value']
-      if (direction == 'on') {
-        $('.poem-text').scroll(0, 100);
-      } else {
-        $('.poem-text').scroll(0, -100);
+      console.log(entities);
+      if (!('on_off' in entities)) {
+        $scope.warning = 'We heard scroll, but not in which direction.'
+        return;
       }
+
+      direction = entities['on_off']['value']
+      if (direction == 'on') {
+        scrollCounter += scrollAmt;
+      } else {
+        scrollCounter -= scrollAmt;
+        if (scrollCounter < 0) {
+          scrollCounter = 0;
+        }
+      }
+      $('.poem-text').scrollTop($('.poem-text').offset().top + scrollCounter);
     }
   })
   .config([
