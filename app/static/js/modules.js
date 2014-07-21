@@ -9,7 +9,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
   })
   .controller('home', function($scope, $sanitize, $http, $location, $timeout) {
     var scrollCounter = 0;
-    $scope.greeting = "PoeTree";
+    $scope.greeting = "TypeLess Poetry"
     $scope.instructions = getInstructions();
     $scope.hasVoice = hasGetUserMedia();
     $scope.isGreeting = function() {
@@ -196,7 +196,6 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
         if (!result.data.success) {
           $scope.warningTerm = "Oh no, there was an error. Please try again."
         } else {
-          console.log(result.data.poem);
           set_poem(result.data.poem);
         }
       });
@@ -205,7 +204,6 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
 
     function do_scroll(entities) {
       //Scroll in some direction. Uses 'on' for down, 'off' for up
-      console.log(entities);
       if (!('on_off' in entities)) {
         $scope.warning = 'We heard scroll, but not in which direction.'
         return;
