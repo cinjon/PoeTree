@@ -40,6 +40,10 @@ def poemnames():
 @app.flask_app.route('/randompoem')
 def randompoem():
     p = app.models.Poem.query.order_by(func.random()).first() #Get random poem
+    import random
+    poems = [p for p in app.models.Poem.query.all() if p.audios.count() > 0]
+    random.shuffle(poems)
+    p = poems[0]
     if not p:
         return app.utility.xhr_response(
             {'success':False}, 400)

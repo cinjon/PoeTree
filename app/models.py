@@ -15,9 +15,8 @@ class Audio(db.Model):
         self.creation_time = utility.get_time()
         self.youtube = None
 
-    def set_audio_filename(title):
+    def set_audio_filename(self, title):
         filename = '-'.join(title.split())
-        app.models.Poem.query.filter(app.models.Poem.title == 'flume').count()
         filename_count = Audio.query.filter(Audio.filename == filename).count()
         if filename_count > 0:
             filename += '-' + str(filename_count)
@@ -74,15 +73,15 @@ class Poem(db.Model):
     def check_match(self, query):
         return check_match(self.title, query)
 
-    def choose_audio(self):
+    def get_audio_src(self):
         if self.audios.count() == 0:
             return None
-        audio = random.choice(self.audios.all())
-        return audio.filename
+        audio = random.choice(self.audios.all()) #Pick a random audio from this poem
+        return '/audio/' + audio.filename + '.m4a'
 
     def display(self):
         return {'text':format_to_css(self.text), 'title':self.get_title(),
-                'audio':self.choose_audio(),
+                'audio':self.get_audio_src(),
                 'poet':Poet.query.get(self.poet_id).get_name(), 'type':'poem'}
 
 def create_poet(name):
