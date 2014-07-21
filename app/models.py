@@ -1,17 +1,47 @@
 from app import db
 from app import utility
+import random
+
+class Audio(db.Model):
+    # Poems have audio files. These are UGC.
+    id = db.Column(db.Integer, primary_key=True)
+    poem_id = db.Column(db.Integer, db.ForeignKey('poem.id'))
+    filename = db.Column(db.Text())
+    creation_time = db.Column(db.DateTime)
+    youtube = db.Column(db.Text()) #in case we decide to upload to youtube
+
+    def __init__(self, poem_title):
+        self.filename = self.set_audio_filename(poem_title)
+        self.creation_time = utility.get_time()
+        self.youtube = None
+
+    def set_audio_filename(title):
+        filename = '-'.join(title.split())
+        app.models.Poem.query.filter(app.models.Poem.title == 'flume').count()
+        filename_count = Audio.query.filter(Audio.filename == filename).count()
+        if filename_count > 0:
+            filename += '-' + str(filename_count)
+        return filename
+
+def create_audio(poem_id):
+    poem = Poem.query.get(poem_id)
+    if not poem:
+        return
+    audio = Audio(poem.title)
+    poem.audios.append(audio)
+    db.session.add(audio)
+    db.session.commit()
+    return audio
 
 class Poet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text())
     poems = db.relationship('Poem', lazy='dynamic', backref='poet')
     creation_time = db.Column(db.DateTime)
-    pushed_to_wit = db.Column(db.Boolean)
 
     def __init__(self, name):
         self.name = name
         self.creation_time = utility.get_time()
-        self.pushed_to_wit = False
 
     def get_name(self):
         return self.name.title()
@@ -25,6 +55,36 @@ class Poet(db.Model):
     def display_poems(self):
         return [poem.display() for poem in self.poems.all()]
 
+class Poem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    creation_time = db.Column(db.DateTime)
+    title = db.Column(db.Text())
+    text = db.Column(db.Text())
+    poet_id = db.Column(db.Integer, db.ForeignKey('poet.id'))
+    audios = db.relationship('Audio', lazy='dynamic', backref='poem')
+
+    def __init__(self, title, text):
+        self.title = title
+        self.text = text
+        self.creation_time = utility.get_time()
+
+    def get_title(self):
+        return self.title.title()
+
+    def check_match(self, query):
+        return check_match(self.title, query)
+
+    def choose_audio(self):
+        if self.audios.count() == 0:
+            return None
+        audio = random.choice(self.audios.all())
+        return audio.filename
+
+    def display(self):
+        return {'text':format_to_css(self.text), 'title':self.get_title(),
+                'audio':self.choose_audio(),
+                'poet':Poet.query.get(self.poet_id).get_name(), 'type':'poem'}
+
 def create_poet(name):
     poet = Poet(name)
     db.session.add(poet)
@@ -37,42 +97,11 @@ def get_or_create_poet(name):
         return poet
     return create_poet(name)
 
-class Poem(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    creation_time = db.Column(db.DateTime)
-    pushed_to_wit = db.Column(db.Boolean)
-    title = db.Column(db.Text())
-    text = db.Column(db.Text())
-    youtube = db.Column(db.Text()) # youtube url
-    audio = db.Column(db.Text()) # audio url
-    poet_id = db.Column(db.Integer, db.ForeignKey('poet.id'))
-
-    def __init__(self, title, text, youtube, audio):
-        self.title = title
-        self.text = text
-        self.youtube = youtube
-        self.audio = audio
-        self.creation_time = utility.get_time()
-        self.pushed_to_wit = False
-
-    def set_youtube(self, youtube):
-        self.youtube = youtube
-        db.session.commit()
-
-    def get_title(self):
-        return self.title.title()
-
-    def check_match(self, query):
-        return check_match(self.title, query)
-
-    def display(self):
-        return {'text':format_to_css(self.text), 'title':self.get_title(), 'youtube':self.youtube, 'audio':self.audio, 'poet':Poet.query.get(self.poet_id).get_name(), 'type':'poem'}
-
-def create_poem(title, text, youtube, audio, poet_id):
+def create_poem(title, text, poet_id):
     poet = Poet.query.get(poet_id)
     if not poet:
         return
-    poem = Poem(title, text, youtube, audio)
+    poem = Poem(title, text)
     poet.poems.append(poem)
     db.session.add(poem)
     db.session.commit()
