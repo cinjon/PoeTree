@@ -272,3 +272,7 @@ function getInstructions() {
 function getAudioPlayer() {
   return document.getElementsByTagName('audio')[0];
 }
+
+audiojs.events.ready(function() {
+  var as = audiojs.createAll();
+});
