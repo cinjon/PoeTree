@@ -24,7 +24,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
       return $scope.hasSearchedObj && $scope.searchedObj.type == "poem";
     }
     $scope.hasPoemAudio = function() {
-      return $scope.hasPoem() && $scope.hasSearchedObj.audio != null;
+      return $scope.hasPoem() && $scope.searchedObj.audio != null;
     }
 
     $scope.sanitize = function(txt) {
@@ -57,15 +57,16 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
       $scope.hasDiscover = hasDiscover;
       $scope.hasAudio = hasAudio;
       if (hasAudio) {
-        $scope.audioPlayer = getAudioPlayer();
+        $scope.audioPlayer = getAudioPlayer('http://www.typelesspoetry.com/' + $scope.searchedObj.audio);
         $scope.audioPlayer.addEventListener('ended', function() {
           isPlaying = false;
+          mic.start();
         });
       }
     }
     function set_poem(poem) {
       $scope.searchedObj = poem;
-      settings_layout(true, false, false, false, false, poem.audio != '');
+      settings_layout(true, false, false, false, false, poem.audio != null);
       settings_notify(poem.title, '');
     }
     function set_poet(poet) {
@@ -99,7 +100,6 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
     };
     mic.onresult = function(intent, entities, res) {
       console.log(intent);
-      console.log(res);
       if (intent == 'back') {
         do_back();
       } else if (intent == 'choose') {
@@ -213,7 +213,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
         }
       });
     }
-    // do_random();
+    do_random();
 
     function do_scroll(entities) {
       //Scroll in some direction. Uses 'on' for down, 'off' for up
@@ -269,8 +269,11 @@ function getInstructions() {
   ]
 }
 
-function getAudioPlayer() {
-  return document.getElementsByTagName('audio')[0];
+function getAudioPlayer(src) {
+  var player = document.getElementsByTagName('audio')[0];
+  player.src = src;
+  player.load();
+  return player;
 }
 
 audiojs.events.ready(function() {

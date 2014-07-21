@@ -29,10 +29,9 @@
     </div>
 
     <div ng-show="hasPoem()">
-      <audio ng-show="hasAudio" preload="none">
-        <source src="{{searchedObj.audio}}" type="audio/mp4" />
-        <p>We want to speak to you, but your browser doesn't support HTML5 Audio.</p>
-      </audio>
+      <div ng-show="hasAudio">
+        <audio></audio>
+      </div>
       <div class="supplementary-info">{{searchedObj.poet}}</div>
       <div class="poem-text" ng-bind-html="sanitize(searchedObj.text)"></div>
     </div>
