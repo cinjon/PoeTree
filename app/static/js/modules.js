@@ -213,7 +213,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
         }
       });
     }
-    do_random();
+    // do_random();
 
     function do_scroll(entities) {
       //Scroll in some direction. Uses 'on' for down, 'off' for up
