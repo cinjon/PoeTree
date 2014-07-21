@@ -139,9 +139,8 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
         if (number > $scope.list.length) {
           return;
         }
-        $scope.searchedObj = $scope.list[number]
-        settings_layout(true, false, true, false, false, false);
-        settings_notify($scope.searchedObj.title, '');
+        set_poem($scope.list[number]);
+        $scope.hasBack = true;
       } else {
         $scope.warningTerm = "Sorry, our hamsters are bad with numbers. Please repeat that.";
       }
