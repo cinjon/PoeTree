@@ -9,7 +9,11 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
   })
   .controller('home', function($scope, $sanitize, $http, $location, $timeout) {
     var scrollCounter = 0;
+    var isMicLooping = false;
+    var isPlaying = false;
+
     $scope.greeting = "TypeLess Poetry"
+    $scope.audioPlayer = null;
     $scope.instructions = getInstructions();
     $scope.hasVoice = hasGetUserMedia();
     $scope.isGreeting = function() {
@@ -52,13 +56,17 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
       $scope.hasHelp = hasHelp;
       $scope.hasDiscover = hasDiscover;
       $scope.hasAudio = hasAudio;
+      if (hasAudio) {
+        $scope.audioPlayer = getAudioPlayer();
+        $scope.audioPlayer.addEventListener('ended', function() {
+          isPlaying = false;
+        });
+      }
     }
     function set_poem(poem) {
       $scope.searchedObj = poem;
       settings_layout(true, false, false, false, false, poem.audio != '');
       settings_notify(poem.title, '');
-      $scope.hasBack = true;
-      $scope.hasAudio = true;
     }
     function set_poet(poet) {
       if (poet.poems.length == 1) {
@@ -75,11 +83,15 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
 
     var mic = new Wit.Microphone(document.getElementById("microphone"));
     mic.onready = function () {
-      mic.start();
+      if (!isPlaying) {
+        mic.start();
+        isMicLooping = true;
+      }
     };
     mic.onaudiostart = function () {
       $timeout(function() {
         mic.stop()
+        isMicLooping = false;
       }, msWitLoop)
     };
     mic.onerror = function (err) {
@@ -187,7 +199,8 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters'])
 
     function do_play() {
       if ($scope.hasPoemAudio()) {
-        //Play Audio
+        isPlaying = true;
+        $scope.audioPlayer.play();
       }
     }
 
@@ -254,4 +267,8 @@ function getInstructions() {
     'Find a <span class="communicate">Random</span> poem',
     'See the instructions again? <span class="communicate">Help</span>',
   ]
+}
+
+function getAudioPlayer() {
+  return document.getElementsByTagName('audio')[0];
 }
