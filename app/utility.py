@@ -40,3 +40,16 @@ def xhr_response(data, code):
     response = jsonify(data)
     response.status_code = code
     return response
+
+########
+# Useful Funcs
+########
+
+dashify_remove = set(['"', "'", '?', '.', '!', ','])
+def dashify(name):
+    # Dashifies a name for routing purposes, e.g.
+    # 'Because I cannot' --> 'because-i-cannot'
+    # '"why do i love" you, sir?' --> 'why-do-i-love-you-sir'
+    newname = ''.join([char for char in name.lower().strip() if char not in dashify_remove])
+    parts = [p for p in newname.split() if not p == '']
+    return '-'.join(parts)
