@@ -16,7 +16,7 @@ class Audio(db.Model):
         self.youtube = None
 
     def set_audio_filename(self, title):
-        filename = '-'.join(title.split())
+        filename = utility.dashify(title)
         filename_count = Audio.query.filter(Audio.filename == filename).count()
         if filename_count > 0:
             filename += '-' + str(filename_count)
