@@ -2,3 +2,4 @@
 
 /* Directives */
 
+angular.module('poetreeDirectives', [])
