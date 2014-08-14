@@ -26,7 +26,7 @@ body {
 
 .search-button {
     visibility:hidden;
-    max-width:45px;
+    width:35px;
     float:left;
     font-size:18px;
     position:relative;
@@ -61,6 +61,7 @@ body {
     margin-right:20px;
     width:760px;
     max-width:760px;
+    border:0;
 }
 
 .searchedObj-line {
@@ -88,6 +89,9 @@ body {
 .poem-text {
     height:497px;
     overflow:scroll;
+}
+
+.body-text {
     margin-left:15px;
 }
 
@@ -110,6 +114,27 @@ body {
 
 .text-align-right {
     text-align:right;
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.cursor {
+    cursor: default;
+}
+
+::-webkit-input-placeholder {
+    color: rgba(9, 14, 207, .5);
+}
+:-moz-placeholder {
+    color: rgba(9, 14, 207, .5);
+}
+::-moz-placeholder {
+    color: rgba(9, 14, 207, .5);
+}
+:-ms-input-placeholder {
+    color: rgba(9, 14, 207, .5);
 }
 
 /* For Angular-UI Bootstrap */

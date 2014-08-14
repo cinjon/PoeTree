@@ -1,29 +1,76 @@
-<div class="row search-row" ng-show="!hasVoice">
-  <p>No Voice</p>
-</div>
-
-<div class="content" ng-show="hasVoice">
+<div class="content">
   <div class="search-row">
     <div id="microphone"></div>
-    <div class="form-control search" ng-class="{communicate:isGreeting}">
-      <div class="search-button" ng-class="{visible:hasBack}">
-        Back
+    <div class="form-control search" ng-class="{communicate:isGreeting, cursor:!typeless}">
+      <div class="search-button" ng-class="{pointer:!typeless,
+                                           visible:hasBack || (!hasBack &&
+                                           !hasHelp)}">
+        <span ng-if="hasBack" ng-click="clickBack()">Back</span>
+        <span ng-if="!hasBack && !hasHelp" ng-click="clickHelp()">Help</span>
+        <span ng-if="!hasBack && hasHelp">Fake</span>
       </div>
-      <div class="search-term">
-        {{searchTerm | title}}
-      </div>
-      <div class="search-button" ng-class="{visible:hasAudio}">
-        Play
-      </div>
+      <input id="searchBox" type="text" class="search-term" ng-show="!typeless"
+             placeholder="Search TLP" ng-model="searchModel"
+             typeahead="search.name for search in getTypeaheadValues($viewValue) | filter:$viewValue"
+             typeahead-loading="loadingSearch" typeahead-min-lenth="3" typeahead-on-select="onSelectSearchTerm($item, $model, $label)">
+      <i ng-show="loadingSearch" class="glyphicon glyphicon-refresh"></i>
+      <div class="search-term" ng-show="typeless">{{searchTerm | title}}</div>
+      <div class="search-button" ng-class="{visible:hasAudio, pointer:!typeless}" ng-click="clickPlay()">Play</div>
     </div>
     <p class="warning">{{warningTerm}}</p>
   </div>
 
   <div class="content-text">
     <div ng-show="hasHelp" class="instructions">
-      <div class="row" ng-repeat="instruction in instructions">
+      <!-- I know this sucks. The alternative is to do really complicated --
+      -- shit with directives because of the ng-click event being --
+      -- inside of all of the compile strings. I choose to save time --
+      -- and just hard code it here. If need arises later that's more
+      than just these five lines, I'll adjust. -->
+      <div class="row">
         <div class="col-xs-8 col-xs-offset-3">
-          <p class="instruction-line" ng-bind-html="sanitize(instruction)"></p>
+          <p class="instruction-line">
+            Speak your favorite poet:
+            <span ng-class="{pointer:!typeless}" class="communicate" ng-click="clickName({ty:'poet', name:'robert frost'})">Robert Frost</span>
+          </p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-8 col-xs-offset-3">
+          <p class="instruction-line">
+            Speak your favorite
+            poem: <span ng-class="{pointer:!typeless}" class="communicate"
+            ng-click="clickName({ty:'poem', name:'the road not taken'})">The Road Not Taken</span>
+          </p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-8 col-xs-offset-3">
+          <p class="instruction-line">
+            Discover our poets and
+            poems: <span ng-class="{pointer:!typeless}" class="communicate" ng-click="clickDiscover()">List</span>
+          </p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-8 col-xs-offset-3">
+          <p class="instruction-line">
+            Find a <span ng-class="{pointer:!typeless}" class="communicate" ng-click="clickRandom()">Random</span> poem
+          </p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-8 col-xs-offset-3">
+          <p class="instruction-line">
+            See the instructions again? <span ng-class="{pointer:!typeless}" class="communicate">Help</span>
+          </p>
+        </div>
+      </div>
+      <div class="row" ng-if="hasVoice">
+        <div class="col-xs-8 col-xs-offset-3">
+          <p class="instruction-line">
+            {{typeToggleMessage}}, <span class="communicate pointer" ng-click="toggleTypeless()">click here</span>
+          </p>
         </div>
       </div>
     </div>
@@ -32,38 +79,36 @@
       <div ng-show="hasAudio">
         <audio></audio>
       </div>
-      <div class="supplementary-info">{{searchedObj.poet}}</div>
-      <div class="poem-text" ng-bind-html="sanitize(searchedObj.text)"></div>
+      <div class="supplementary-info communicate" ng-class="{pointer:!typeless}"
+      ng-click="clickName({ty:'poet', 'name':searchedObj.poet})">{{searchedObj.poet}}</div>
+      <div class="poem-text body-text" ng-bind-html="sanitize(searchedObj.text)"></div>
     </div>
 
     <div ng-show="hasDiscover">
-      <div class="communicate discover">
+      <div class="communicate discover" ng-class="{pointer:!typeless}">
         <div class="col-xs-3">
-          <div class="row discover-line" ng-repeat="poet in poetnames">
+          <div class="row discover-line" ng-repeat="poet in poets" ng-click="clickName(poet)">
             {{poet.name}}
           </div>
         </div>
         <div class="col-xs-4">
-          <div class="row discover-line ellipsis" ng-repeat="poem in poemnames_first">
-            {{poem.title}}
+          <div class="row discover-line ellipsis" ng-repeat="poem in
+                                                             poemNamesFirst" ng-click="clickName(poem)">
+            {{poem.name}}
           </div>
         </div>
-        <div class="col-xs-3">
-          <div class="row discover-line text-align-right ellipsis" ng-repeat="poem in poemnames_second">
-            {{poem.title}}
-          </div>
-        </div>
-        <div class="col-xs-2">
-          <div class="row discover-line text-align-right ellipsis" ng-repeat="poem in poemnames_third">
-            {{poem.title}}
+        <div class="col-xs-3" ng-repeat="poemList in poemListsTwoThree">
+          <div class="row discover-line text-align-right ellipsis"
+            ng-repeat="poem in poemList" ng-click="clickName(poem)">
+            {{poem.name}}
           </div>
         </div>
       </div>
     </div>
 
-    <div ng-show="hasList">
+    <div ng-show="hasList" class="body-text">
       <div class="searchedObj-line" ng-repeat="obj in list track by $index">
-        <div class="list-index communicate">
+        <div class="list-index communicate" ng-class="{pointer:!typeless}" ng-click="clickChoose($index)">
           Choose {{$index+1 | numToStr}}
         </div>
         <div class="list-info" ng-class="colorClass(obj.type)">
