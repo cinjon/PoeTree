@@ -5,6 +5,7 @@ from  sqlalchemy.sql.expression import func, select
 import random
 
 find_limit = 5
+typeahead_limit = 10
 
 # special file handlers and error handlers
 @app.flask_app.route('/favicon.ico')
@@ -23,20 +24,6 @@ def page_not_found(e):
 def basic_pages(**kwargs):
     return make_response(open('app/public/template/index.html').read())
 
-@app.flask_app.route('/poetnames')
-def poetnames():
-    return app.utility.xhr_response(
-        {'names':[{'name':p.get_name()} for p in sorted(
-            app.models.Poet.query.all(), key=lambda p:len(p.name))]},
-        200)
-
-@app.flask_app.route('/poemnames')
-def poemnames():
-    return app.utility.xhr_response(
-        {'names':[{'title':p.get_title()} for p in sorted(
-            app.models.Poem.query.all(), key=lambda p:len(p.title), reverse=True)]},
-        200)
-
 @app.flask_app.route('/randompoem')
 def randompoem():
     # p = app.models.Poem.query.order_by(func.random()).first() #Get random poem
@@ -49,6 +36,34 @@ def randompoem():
             {'success':False}, 400)
     return app.utility.xhr_response(
         {'success':True, 'poem':p.display()}, 200)
+
+@app.flask_app.route('/typeahead/<query>')
+@app.flask_app.route('/all')
+def typeahead(query=None):
+    query = query.lower()
+    poems = app.models.Poem.query.all()
+    poets = app.models.Poet.query.all()
+    if query is not None:
+        poets = get_matching(poets, query)
+        poems = get_matching(poems, query)
+
+    data = [{'name':p.get_name(), 'ty':'poet'} for p in sorted(poets, key=lambda p:len(p.name))][:typeahead_limit]
+    data += [{'name':p.get_title(), 'ty':'poem'} for p in sorted(poems, key=lambda p:len(p.title), reverse=True)][:typeahead_limit]
+    return app.utility.xhr_response({'data':data}, 200)
+
+@app.flask_app.route('/get_data/<ty>/<name>')
+def get_data(ty, name):
+    """ty is either poet or poem. name is the exact name of the poet/poem"""
+    name = name.lower()
+    p = None
+    if ty == 'poet':
+        p = app.models.Poet.query.filter(app.models.Poet.name == name).first()
+    elif ty == 'poem':
+        p = app.models.Poem.query.filter(app.models.Poem.title == name).first()
+
+    if p:
+        return app.utility.xhr_response({'success':True, 'data':p.display()}, 200)
+    return app.utility.xhr_response({'success':False}, 400)
 
 @app.flask_app.route('/find/<query>')
 def find(query):
