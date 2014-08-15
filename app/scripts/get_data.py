@@ -69,13 +69,14 @@ def make_poem(soup, audio, title, poet, ty):
     poem_text = get_poem_text(soup, ty)
     if not poem_text:
         print "No Poem text for %s with author %s" % (title, poet.name)
-    app.models.create_poem(title, poem_text, None, audio, poet.id)
+    app.models.create_poem(title, poem_text, poet.id)
 
 def has_poem(title, poet_id):
     return app.models.Poem.query.filter(app.models.Poem.title == title, app.models.Poem.poet_id==poet_id).count() > 0
 
-def _get_poems(poems, ty):
+def _get_poems(urls, ty):
     for url in urls:
+        print url
         soup = bs4.BeautifulSoup(urllib2.urlopen(urllib2.Request(url)))
         poet = get_poet(soup, ty)
         if not poet:
@@ -93,10 +94,10 @@ def get_poems_from_foundation(poems):
     # poems is a list of poem ids, e.g. 173742 --> Ode on a Grecian Urn
     baseurl = 'http://www.poetryfoundation.org/poem/'
     urls = [baseurl + str(poem) for poem in poems]
-    _get_poems(poems, 'foundation')
+    _get_poems(urls, 'foundation')
 
 def get_poems_from_poemhunter(poems):
     # poems is a list of poem routes, e.g. d-jeuner-du-matin --> Dejeuner du matin
     baseurl = 'http://www.poemhunter.com/poem/'
     urls = [baseurl + str(poem) for poem in poems]
-    _get_poems(poems, 'hunter')
+    _get_poems(urls, 'hunter')
