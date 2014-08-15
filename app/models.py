@@ -1,6 +1,7 @@
 from app import db
 from app import utility
 import random
+import os
 
 class Audio(db.Model):
     # Poems have audio files. These are UGC.
@@ -77,7 +78,7 @@ class Poem(db.Model):
         if self.audios.count() == 0:
             return None
         audio = random.choice(self.audios.all()) #Pick a random audio from this poem
-        return '/audio/' + audio.filename + '.m4a'
+        return '/audio/poems-set/' + audio.filename + '.m4a'
 
     def display(self):
         return {'text':format_to_css(self.text), 'title':self.get_title(),
