@@ -8,11 +8,13 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
 
   })
   .controller('home', function($scope, $sanitize, $http, $location, $timeout, limitToFilter) {
+    //controller vars
     var scrollCounter = 0;
     var isMicLooping = false;
     var isPlaying = false;
     var isTypeless = false;
 
+    //Scope vars
     $scope.searchTerm = '';
     $scope.greeting = "Search TLP"
     $scope.audioPlayer = null;
@@ -20,22 +22,10 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     if (!$scope.hasVoice) {
       isTypeless = false;
     }
-
     $scope.typeless = isTypeless;
-    $scope.toggleTypeless = function() {
-      $scope.typeless = !$scope.typeless;
-      isTypeless = $scope.typeless;
-    }
-    $scope.$watch('typeless', function(newvar) {
-      $scope.typeToggleMessage = newvar ? "I really really want to use my hands. Ok" : "I'm an intrepid voice explorer. Fantastic";
-      if ($scope.typeless) {
-        mic.start();
-      } else {
-        mic.stop();
-      }
-    });
+
+    //Scope boolean funcs
     $scope.isGreeting = function() {
-      //Check if the search term in the box is the greeting
       return $scope.searchTerm == $scope.greeting;
     }
     $scope.hasPoem = function() {
@@ -44,22 +34,25 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     $scope.hasPoemAudio = function() {
       return $scope.hasPoem() && $scope.searchedObj.audio != null;
     }
-    settings_notify($scope.greeting, '');
 
+    //Scope action funcs
+    $scope.toggleTypeless = function() {
+      $scope.typeless = !$scope.typeless;
+      isTypeless = $scope.typeless;
+    }
     $scope.sanitize = function(txt) {
       if (txt) {
         return $sanitize(txt);
       }
     }
 
+    //Scope typeahead funcs
     $scope.searchFocus = function(event) {
       event.target.value = '';
     }
     $scope.searchBlur = function(event) {
       event.target.value = $scope.searchTerm;
     }
-
-    //Get the poet and poem names
     $scope.getTypeaheadValues = function(val) {
       return $http.get('/typeahead/' + val, {}).then(function(result) {
         var poets = result.data.poets || [];
@@ -67,11 +60,21 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
         return poets.concat(poems);
       });
     }
-
     $scope.onSelectSearchTerm = function(item, model, label) {
       httpGetItem(item);
     }
 
+    //Scope watch
+    $scope.$watch('typeless', function(newvar) {
+      $scope.typeToggleMessage = newvar ? "I really really want to use my hands. Ok" : "I'm an intrepid voice explorer. Fantastic";
+      if ($scope.typeless) {
+        mic.start();
+      } else {
+        mic.stop();
+      }
+    });
+
+    //Helper funcs to make changes more regular
     function settings_notify(searchTerm, warningTerm) {
       //Set searchTerm, warningTerm
       $scope.searchTerm = searchTerm;
@@ -109,7 +112,9 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
       }
     }
     settings_layout(false, false, false, true, false, false);
+    settings_notify($scope.greeting, '');
 
+    //Microphone funcs
     var mic = new Wit.Microphone(document.getElementById("microphone"));
     mic.onready = function () {
       if (!isPlaying && isTypeless) {
@@ -149,6 +154,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     }
     mic.connect('X4HVIEQCOLHU6VMRWJAEL5QM27OGGZSW');
 
+    //Navigation funcs
     function doBack() {
       //return back from poem page to poet page
       if ($scope.hasBack) {
@@ -156,7 +162,6 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
         settings_layout(false, true, false, false, false, false);
       }
     }
-
     function doChoose(entities) {
       //choose one of the options already presented on the poet page, if exist
       if (!$scope.hasList) {
@@ -172,19 +177,10 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
         $scope.warningTerm = "Sorry, our hamsters are bad with numbers. Please repeat that.";
       }
     }
-
-    $http.get('/all', {}).then(function(result) {
-      var poems = result.data.poems;
-      $scope.poemNamesFirst = poems.slice(0,Math.ceil(poems.length/3))
-      $scope.poemNamesSecond = poems.slice(Math.ceil(poems.length/3), 2*Math.ceil(poems.length/3));
-      $scope.poemNamesThird = poems.slice(2*Math.ceil(poems.length/3));
-      $scope.poets = result.data.poets;
-    });
     function doDiscover() {
       settings_notify($scope.greeting, '');
       settings_layout(false, false, false, false, true, false);
     }
-
     function doFind(entities, res) {
       if ('poet' in entities) {
         name = entities['poet']['value']
@@ -197,6 +193,80 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
       }
       httpFind(name);
     }
+    function doHelp() {
+      settings_notify($scope.greeting, '');
+      settings_layout(false, false, false, true, false, false);
+    }
+    function doPlay() {
+      if ($scope.hasPoemAudio()) {
+        isPlaying = true;
+        $scope.audioPlayer.play();
+      }
+    }
+    function doRandom() {
+      $http.get('/randompoem', {}).then(function(result) {
+        if (!result.data.success) {
+          $scope.warningTerm = "Oh no, there was an error. Please try again."
+        } else {
+          set_poem(result.data.poem);
+        }
+      });
+    }
+    function doScroll(entities) {
+      //Scroll in some direction. Uses 'on' for down, 'off' for up
+      var direction;
+      var entities = entities['on_off'];
+      if (!entities) {
+        direction = 'on';
+      } else {
+        direction = entities['value'];
+      }
+
+      if (direction == 'off') {
+        scrollCounter -= scrollAmt;
+        if (scrollCounter < 0) {
+          scrollCounter = 0;
+        }
+      } else {
+        scrollCounter += scrollAmt;
+      }
+      $('.poem-text').scrollTop($('.poem-text').offset().top + scrollCounter);
+    }
+
+    //Different funcs for clicking because we want to do a check on if typeless is not in effect
+    function doClick(f, optional_var) {
+      if (isTypeless || isPlaying) {return;}
+      f(optional_var);
+    }
+    $scope.clickDiscover = function() {
+      doClick(doDiscover);
+    }
+    $scope.clickHelp = function() {
+      doClick(doHelp);
+    }
+    $scope.clickPlay = function() {
+      doClick(doPlay);
+    }
+    $scope.clickRandom = function() {
+      doClick(doRandom);
+    }
+    $scope.clickBack = function() {
+      doClick(doBack);
+    }
+    $scope.clickChoose = function(index) {
+      doClick(doChoose, {'number':{'value':index+1}});
+    }
+    $scope.clickName = function(obj) {
+      doClick(httpGetItem, obj);
+    }
+
+    $http.get('/all', {}).then(function(result) {
+      var poems = result.data.poems;
+      $scope.poemNamesFirst = poems.slice(0,Math.ceil(poems.length/3))
+      $scope.poemNamesSecond = poems.slice(Math.ceil(poems.length/3), 2*Math.ceil(poems.length/3));
+      $scope.poemNamesThird = poems.slice(2*Math.ceil(poems.length/3));
+      $scope.poets = result.data.poets;
+    });
 
     function httpFind(name) {
       settings_notify(name, '');
@@ -227,50 +297,6 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
         }
       });
     }
-
-    function doHelp() {
-      settings_notify($scope.greeting, '');
-      settings_layout(false, false, false, true, false, false);
-    }
-
-    function doPlay() {
-      if ($scope.hasPoemAudio()) {
-        isPlaying = true;
-        $scope.audioPlayer.play();
-      }
-    }
-
-    function doRandom() {
-      $http.get('/randompoem', {}).then(function(result) {
-        if (!result.data.success) {
-          $scope.warningTerm = "Oh no, there was an error. Please try again."
-        } else {
-          set_poem(result.data.poem);
-        }
-      });
-    }
-
-    function doScroll(entities) {
-      //Scroll in some direction. Uses 'on' for down, 'off' for up
-      var direction;
-      var entities = entities['on_off'];
-      if (!entities) {
-        direction = 'on';
-      } else {
-        direction = entities['value'];
-      }
-
-      if (direction == 'off') {
-        scrollCounter -= scrollAmt;
-        if (scrollCounter < 0) {
-          scrollCounter = 0;
-        }
-      } else {
-        scrollCounter += scrollAmt;
-      }
-      $('.poem-text').scrollTop($('.poem-text').offset().top + scrollCounter);
-    }
-
     function httpGetItem(item) {
       var ty = item.ty;
       $http.get('/get_data/' + ty + '/' + item.name, {}).then(function(result) {
@@ -281,41 +307,6 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
           set_poem(result.data.data);
         }
       });
-    }
-
-    function doClick(f, optional_var) {
-      if (isTypeless || isPlaying) {return;}
-      f(optional_var);
-    }
-
-    $scope.clickDiscover = function() {
-      doClick(doDiscover);
-    }
-
-    $scope.clickHelp = function() {
-      doClick(doHelp);
-    }
-
-    $scope.clickPlay = function() {
-      doClick(doPlay);
-    }
-
-    $scope.clickRandom = function() {
-      doClick(doRandom);
-    }
-
-    $scope.clickBack = function() {
-      doClick(doBack);
-    }
-
-    $scope.clickChoose = function(index) {
-      //index is an index into list. in this case, we clicked choose. only accept if !typeless
-      doClick(doChoose, {'number':{'value':index+1}});
-    }
-
-    $scope.clickName = function(obj) {
-      //obj is a {name:String, ty:poet|poem}}
-      doClick(httpGetItem, obj);
     }
   })
   .config([
