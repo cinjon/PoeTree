@@ -52,10 +52,19 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
       }
     }
 
+    $scope.searchFocus = function(event) {
+      event.target.value = '';
+    }
+    $scope.searchBlur = function(event) {
+      event.target.value = $scope.searchTerm;
+    }
+
     //Get the poet and poem names
     $scope.getTypeaheadValues = function(val) {
       return $http.get('/typeahead/' + val, {}).then(function(result) {
-        return result.data.data;
+        var poets = result.data.poets || [];
+        var poems = result.data.poems || [];
+        return poets.concat(poems);
       });
     }
 
@@ -164,17 +173,16 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
       }
     }
 
+    $http.get('/all', {}).then(function(result) {
+      var poems = result.data.poems;
+      $scope.poemNamesFirst = poems.slice(0,Math.ceil(poems.length/3))
+      $scope.poemNamesSecond = poems.slice(Math.ceil(poems.length/3), 2*Math.ceil(poems.length/3));
+      $scope.poemNamesThird = poems.slice(2*Math.ceil(poems.length/3));
+      $scope.poets = result.data.poets;
+    });
     function doDiscover() {
-      return $http.get('/all', {}).then(function(result) {
-        poems = result.data.poems;
-        $scope.poemNamesFirst = poems.slice(0,Math.ceil(poems.length/3))
-        $scope.poemListsTwoThree = [
-          poems.slice(Math.ceil(poems.length/3), 2*Math.ceil(poems.length/3)),
-          poems.slice(2*Math.ceil(poems.length/3))]
-        $scope.poets = result.data.poets;
-        settings_notify($scope.greeting, '');
-        settings_layout(false, false, false, false, true, false);
-      });
+      settings_notify($scope.greeting, '');
+      settings_layout(false, false, false, false, true, false);
     }
 
     function doFind(entities, res) {
@@ -220,14 +228,9 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
       });
     }
 
-    $scope.focusSearch = function() {
-      $scope.searchModel = '';
-    }
-
     function doHelp() {
       settings_notify($scope.greeting, '');
       settings_layout(false, false, false, true, false, false);
-      $scope.searchModel = '';
     }
 
     function doPlay() {
@@ -237,11 +240,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
       }
     }
 
-    function doRandom(typeless_check) {
-      console.log('doRandom: ' + typeless_check);
-      if (typeless_check) {
-        return;
-      }
+    function doRandom() {
       $http.get('/randompoem', {}).then(function(result) {
         if (!result.data.success) {
           $scope.warningTerm = "Oh no, there was an error. Please try again."
@@ -250,7 +249,6 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
         }
       });
     }
-    // doRandom();
 
     function doScroll(entities) {
       //Scroll in some direction. Uses 'on' for down, 'off' for up

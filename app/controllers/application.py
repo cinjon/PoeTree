@@ -40,16 +40,16 @@ def randompoem():
 @app.flask_app.route('/typeahead/<query>')
 @app.flask_app.route('/all')
 def typeahead(query=None):
-    query = query.lower()
     poems = app.models.Poem.query.all()
     poets = app.models.Poet.query.all()
     if query is not None:
-        poets = get_matching(poets, query)
-        poems = get_matching(poems, query)
+        query = query.lower()
+        poets = get_matching(poets, query)[:typeahead_limit]
+        poems = get_matching(poems, query)[:typeahead_limit]
 
-    data = [{'name':p.get_name(), 'ty':'poet'} for p in sorted(poets, key=lambda p:len(p.name))][:typeahead_limit]
-    data += [{'name':p.get_title(), 'ty':'poem'} for p in sorted(poems, key=lambda p:len(p.title), reverse=True)][:typeahead_limit]
-    return app.utility.xhr_response({'data':data}, 200)
+    poets = [{'name':p.get_name(), 'ty':'poet'} for p in sorted(poets, key=lambda p:len(p.name))]
+    poems = [{'name':p.get_title(), 'ty':'poem'} for p in sorted(poems, key=lambda p:len(p.title), reverse=True)]
+    return app.utility.xhr_response({'poets':poets, 'poems':poems}, 200)
 
 @app.flask_app.route('/get_data/<ty>/<name>')
 def get_data(ty, name):

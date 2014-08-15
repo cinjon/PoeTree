@@ -9,13 +9,20 @@
         <span ng-if="!hasBack && !hasHelp" ng-click="clickHelp()">Help</span>
         <span ng-if="!hasBack && hasHelp">Fake</span>
       </div>
-      <input id="searchBox" type="text" class="search-term" ng-show="!typeless"
-             placeholder="Search TLP" ng-model="searchModel"
+      <input id="searchBox" type="text" class="search-term"
+             ng-show="!typeless" ng-focus="searchFocus($event)" ng-blur="searchBlur($event)"
+             placeholder="Search TLP" ng-model="searchTerm"
              typeahead="search.name for search in getTypeaheadValues($viewValue) | filter:$viewValue"
              typeahead-loading="loadingSearch" typeahead-min-lenth="3" typeahead-on-select="onSelectSearchTerm($item, $model, $label)">
       <i ng-show="loadingSearch" class="glyphicon glyphicon-refresh"></i>
       <div class="search-term" ng-show="typeless">{{searchTerm | title}}</div>
-      <div class="search-button" ng-class="{visible:hasAudio, pointer:!typeless}" ng-click="clickPlay()">Play</div>
+      <div class="search-button" ng-class="{visible:hasAudio || (!hasHelp && !hasDiscover),
+                                           pointer:!typeless}">
+        <span ng-if="hasAudio" ng-click="clickPlay()">Play</span>
+        <span ng-if="!hasAudio && !hasDiscover"
+        ng-click="clickDiscover()">List</span>
+        <span ng-if="!hasAudio && hasDiscover">Fake</span>
+      </div>
     </div>
     <p class="warning">{{warningTerm}}</p>
   </div>
@@ -79,8 +86,9 @@
       <div ng-show="hasAudio">
         <audio></audio>
       </div>
-      <div class="supplementary-info communicate" ng-class="{pointer:!typeless}"
-      ng-click="clickName({ty:'poet', 'name':searchedObj.poet})">{{searchedObj.poet}}</div>
+      <div class="supplementary-info communicate">
+        <span ng-class="{pointer:!typeless}" ng-click="clickName({ty:'poet', 'name':searchedObj.poet})">{{searchedObj.poet}}</span>
+      </div>
       <div class="poem-text body-text" ng-bind-html="sanitize(searchedObj.text)"></div>
     </div>
 
@@ -97,9 +105,13 @@
             {{poem.name}}
           </div>
         </div>
-        <div class="col-xs-3" ng-repeat="poemList in poemListsTwoThree">
-          <div class="row discover-line text-align-right ellipsis"
-            ng-repeat="poem in poemList" ng-click="clickName(poem)">
+        <div class="col-xs-3">
+          <div class="row discover-line text-align-right ellipsis" ng-repeat="poem in poemNamesSecond" ng-click="clickName(poem)">
+            {{poem.name}}
+          </div>
+        </div>
+        <div class="col-xs-2">
+          <div class="row discover-line text-align-right ellipsis" ng-repeat="poem in poemNamesThird" ng-click="clickName(poem)">
             {{poem.name}}
           </div>
         </div>
