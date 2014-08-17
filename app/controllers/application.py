@@ -1,6 +1,6 @@
 import app
 import os
-from flask import send_from_directory, render_template, make_response
+from flask import send_from_directory, render_template, make_response, request
 from  sqlalchemy.sql.expression import func, select
 import random
 
@@ -50,6 +50,33 @@ def typeahead(query=None):
     poets = [{'name':p.get_name(), 'ty':'poet'} for p in sorted(poets, key=lambda p:len(p.name))]
     poems = [{'name':p.get_title(), 'ty':'poem'} for p in sorted(poems, key=lambda p:len(p.title), reverse=True)]
     return app.utility.xhr_response({'poets':poets, 'poems':poems}, 200)
+
+@app.flask_app.route('/save-record', methods=['POST'])
+def save_record():
+    blob = request.files['file']
+    title = request.form['title']
+    if not blob:
+        return app.utility.xhr_response({'success':False, 'msg':"Your voice is too powerful. The hamsters got scared. Please try again."}, 200)
+    elif not title:
+        return app.utility.xhr_response({'success':False, 'msg':"There was a mistake. The hamsters are on it."}, 200)
+    filename = blob.filename
+    app.flask_app.logger.debug(title)
+    try:
+        poem = app.models.Poem.query.filter(app.models.Poem.title == title.lower()).first()
+        app.flask_app.logger.debug('got poem')
+        if not poem:
+            app.flask_app.logger.debug('no poem with title %s' % title.lower())
+            raise
+        blob.save('/Users/cinjon/Desktop/code/poetry/audio/poems-unset/' + filename + '.wav')
+        app.flask_app.logger.debug('saved blob')
+        audio = app.models.create_audio(poem.id, filename)
+        app.flask_app.logger.debug('craeted audio %d' % audio.id)
+        app.utility.mv('/Users/cinjon/Desktop/code/poetry/audio/poems-unset/' + filename + '.wav',
+                       '/Users/cinjon/Desktop/code/poetry/audio/poems-set/' + filename + '.wav')
+        app.flask_app.logger.debug('moved audio')
+        return app.utility.xhr_response({'success':True, 'poem':poem.display()}, 200)
+    except Exception, e:
+        return app.utility.xhr_response({'success':False, 'msg':"Sorry, the hamsters couldn't find a good shelf for that. Please try again."}, 200)
 
 @app.flask_app.route('/get_data/<ty>/<name>')
 def get_data(ty, name):

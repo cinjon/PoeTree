@@ -33,6 +33,11 @@ body {
     top:6px;
 }
 
+.record-button {
+    float:right;
+    margin-right:25px;
+}
+
 .visible {
     visibility:visible;
 }
@@ -82,8 +87,8 @@ body {
 }
 
 .supplementary-info {
-    text-align:right;
-    margin-right:15px;
+    margin-left:15px;
+    margin-bottom:15px;
 }
 
 .poem-text {
@@ -122,6 +127,10 @@ body {
 
 .cursor {
     cursor: default;
+}
+
+.red {
+    color:#D61E74 !important;
 }
 
 ::-webkit-input-placeholder {

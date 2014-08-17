@@ -1,4 +1,5 @@
 import app
+import os
 import datetime
 import random
 import string
@@ -53,3 +54,6 @@ def dashify(name):
     newname = ''.join([char for char in name.lower().strip() if char not in dashify_remove])
     parts = [p for p in newname.split() if not p == '']
     return '-'.join(parts)
+
+def mv(start, end):
+    os.rename(start, end)

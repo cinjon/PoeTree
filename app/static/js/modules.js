@@ -3,11 +3,17 @@
 var msWitLoop = 800;
 var scrollAmt = 280;
 
+/*
+The Home Controller is monolithic at this point. I should cut it down to size by splitting up the different parts. The tricky part is what to do with the Mic and how to:
+A. Pass it through to other controllers
+B. Set it up so that if you enter at /blah, you still get the option to switch
+*/
+
 angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectives', 'ui.bootstrap'])
   .controller('about', function($scope) {
 
   })
-  .controller('home', function($scope, $sanitize, $http, $location, $timeout, limitToFilter) {
+  .controller('home', function($scope, $sanitize, $http, $location, $timeout, $window, limitToFilter) {
     //controller vars
     var scrollCounter = 0;
     var isMicLooping = false;
@@ -17,12 +23,27 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     //Scope vars
     $scope.searchTerm = '';
     $scope.greeting = "Search TLP"
-    $scope.audioPlayer = null;
+    $scope.audioPlayer = getAudioPlayer('audio-src');
     $scope.hasVoice = hasGetUserMedia();
+    initAudio();
     if (!$scope.hasVoice) {
       isTypeless = false;
     }
     $scope.typeless = isTypeless;
+    $scope.recording = false;
+    $scope.countdown = -1;
+    $scope.countdownTimer = function() {
+      if ($scope.countdown > 0) {
+        $scope.countdown--;
+        if ($scope.countdown == 0) {
+          $scope.recording = true;
+          startRecording();
+        }
+        $timeout($scope.countdownTimer, 1000);
+      }
+    }
+    $scope.isPlayback = false;
+    $scope.record = {'filename':null, 'url':null, 'blob':null}
 
     //Scope boolean funcs
     $scope.isGreeting = function() {
@@ -39,6 +60,50 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     $scope.toggleTypeless = function() {
       $scope.typeless = !$scope.typeless;
       isTypeless = $scope.typeless;
+    }
+    $scope.toggleRecord = function(poem) {
+      $scope.audioPlayer.pause();
+      $scope.isPlayback = false;
+      if ($scope.countdown > 0) { //Canceled during countdown
+        $scope.countdown = -1;
+      } else if ($scope.recording) { //Completed recording
+        $scope.recording = false;
+        $scope.countdown = -1;
+        stopRecording();
+        $scope.isPlayback = true;
+      } else { // Pressed the button. Start the timer.
+        $scope.countdown = 1;
+        $timeout($scope.countdownTimer, 1000);
+      }
+    }
+    $scope.playback = function() {
+      // Play the recording back to the user
+      setAudioPlayer($scope.audioPlayer, $scope.record.url, audioEndedEvent);
+      isPlaying = true;
+      $scope.audioPlayer.play();
+    }
+    $scope.save = function() {
+      // Upload the recording to the server
+      var form = new FormData();
+      form.append('file', $scope.record.blob, $scope.record.filename);
+      form.append('title', $scope.searchedObj.title);
+      $.ajax({
+        type: 'POST',
+        url: '/save-record',
+        data: form,
+        processData: false,
+        contentType: false
+      }).done(function(data) {
+        if (data.success) {
+          set_poem(data.poem);
+        } else {
+          $scope.warningTerm = data.msg;
+        }
+      });
+    }
+    $scope.download = function() {
+      // Let the user download their .wav recording
+      $('a#download-link').attr({target: '_blank', href  : $scope.record.url, download: $scope.record.filename});
     }
     $scope.sanitize = function(txt) {
       if (txt) {
@@ -73,12 +138,29 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
         mic.stop();
       }
     });
+    $scope.$watch('countdown', function(newvar) {
+      if (newvar > 0) {
+        $scope.recordMessage = 'Ready in ' + newvar;
+      } else if ($scope.recording) {
+        $scope.recordMessage = 'Recording';
+      } else if ($scope.isPlayback) {
+        $scope.recordMessage = 'Re-record';
+      } else {
+        $scope.recordMessage = 'Record';
+      }
+    });
 
     //Helper funcs to make changes more regular
     function settings_notify(searchTerm, warningTerm) {
       //Set searchTerm, warningTerm
       $scope.searchTerm = searchTerm;
       $scope.warningTerm = warningTerm;
+    }
+    function audioEndedEvent() {
+      isPlaying = false;
+      if ($scope.typeless) {
+        mic.start();
+      }
     }
     function settings_layout(hasSearchedObj, hasList, hasBack, hasHelp, hasDiscover, hasAudio) {
       //Set layout settings
@@ -88,13 +170,8 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
       $scope.hasHelp = hasHelp;
       $scope.hasDiscover = hasDiscover;
       $scope.hasAudio = hasAudio;
-      if (hasAudio) {
-        $scope.audioPlayer = getAudioPlayer('http://www.typelesspoetry.com/' + $scope.searchedObj.audio);
-        $scope.audioPlayer.addEventListener('ended', function() {
-          isPlaying = false;
-          mic.start();
-        });
-      }
+      $scope.isPlayback = false;
+      $scope.record = {'filename':null, 'url':null, 'blob':null};
     }
     function set_poem(poem) {
       $scope.searchedObj = poem;
@@ -199,6 +276,8 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     }
     function doPlay() {
       if ($scope.hasPoemAudio()) {
+        var src =  'http://www.typelesspoetry.com/' + $scope.searchedObj.audio;
+        setAudioPlayer($scope.audioPlayer, src, audioEndedEvent);
         isPlaying = true;
         $scope.audioPlayer.play();
       }
@@ -308,6 +387,59 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
         }
       });
     }
+
+
+    $window.audioContext = $window.AudioContext || $window.webkitAudioContext;
+    var audioContext = new AudioContext();
+    var audioInput = null,
+    realAudioInput = null,
+    inputPoint = null,
+    audioRecorder = null;
+
+function saveAudio() {
+  audioRecorder.exportWAV(doneEncoding);
+}
+
+function doneEncoding(blob) {
+  $scope.record.filename = $scope.searchedObj.next_audio; //Might bei n searchModel, ugh. unify these
+  $scope.record.url = (window.URL || window.webkitURL).createObjectURL(blob);
+  $scope.record.blob = blob;
+}
+
+function stopRecording() {
+  audioRecorder.stop();
+  audioRecorder.getBuffer(saveAudio);
+}
+
+function startRecording() {
+  audioRecorder.clear();
+  audioRecorder.record();
+}
+
+function gotStream(stream) {
+  inputPoint = audioContext.createGain();
+  // Create an AudioNode from the stream.
+  realAudioInput = audioContext.createMediaStreamSource(stream);
+  audioInput = realAudioInput;
+  audioInput.connect(inputPoint);
+  audioRecorder = new Recorder(inputPoint);
+}
+
+function initAudio() {
+  if (!navigator.getUserMedia)
+    navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+  if (!navigator.cancelAnimationFrame)
+    navigator.cancelAnimationFrame = navigator.webkitCancelAnimationFrame || navigator.mozCancelAnimationFrame;
+  if (!navigator.requestAnimationFrame)
+    navigator.requestAnimationFrame = navigator.webkitRequestAnimationFrame || navigator.mozRequestAnimationFrame;
+
+  navigator.getUserMedia({audio:true}, gotStream, function(e) {
+    alert('Error getting audio');
+    console.log(e);
+  });
+}
+
+$window.addEventListener('load', initAudio );
   })
   .config([
     '$routeProvider', '$locationProvider',
@@ -333,17 +465,19 @@ function hasGetUserMedia() {
             navigator.mozGetUserMedia || navigator.msGetUserMedia);
 }
 
-function doRandom() {
-  console.log('outside of scope');
+function getAudioPlayer(domID) {
+  var player = document.getElementById(domID);
+  setAudioPlayer(player, '', null);
+  return player;
 }
-
-function getAudioPlayer(src) {
-  var player = document.getElementsByTagName('audio')[0];
+function setAudioPlayer(player, src, endedCallBack) {
   player.src = src;
   player.load();
-  return player;
+  if (endedCallBack) {
+    player.addEventListener('ended', endedCallBack)
+  }
 }
 
 audiojs.events.ready(function() {
   var as = audiojs.createAll();
-});
+})

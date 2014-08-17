@@ -11,27 +11,27 @@ class Audio(db.Model):
     creation_time = db.Column(db.DateTime)
     youtube = db.Column(db.Text()) #in case we decide to upload to youtube
 
-    def __init__(self, poem_title):
-        self.filename = self.set_audio_filename(poem_title)
+    def __init__(self, poem_title, filename=None):
+        self.filename = filename or get_next_audio(poem_title)
         self.creation_time = utility.get_time()
         self.youtube = None
 
-    def set_audio_filename(self, title):
-        filename = utility.dashify(title)
-        filename_count = Audio.query.filter(Audio.filename == filename).count()
-        if filename_count > 0:
-            filename += '-' + str(filename_count)
-        return filename
-
-def create_audio(poem_id):
+def create_audio(poem_id, filename=None):
     poem = Poem.query.get(poem_id)
     if not poem:
         return
-    audio = Audio(poem.title)
+    audio = Audio(poem.title, filename)
     poem.audios.append(audio)
     db.session.add(audio)
     db.session.commit()
     return audio
+
+def get_next_audio(title):
+    filename = utility.dashify(title)
+    filename_count = Audio.query.filter(Audio.filename == filename).count()
+    if filename_count > 0:
+        filename += '-' + str(filename_count)
+    return filename
 
 class Poet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -78,11 +78,14 @@ class Poem(db.Model):
         if self.audios.count() == 0:
             return None
         audio = random.choice(self.audios.all()) #Pick a random audio from this poem
-        return '/audio/poems-set/' + audio.filename + '.m4a'
+        filename = 'audio/poems-set/' + audio.filename
+        if os.path.exists(filename + '.m4a'):
+            return filename + '.m4a'
+        return filename + '.wav'
 
     def display(self):
         return {'text':format_to_css(self.text), 'title':self.get_title(),
-                'audio':self.get_audio_src(),
+                'next_audio':get_next_audio(self.title), 'audio':self.get_audio_src(),
                 'poet':Poet.query.get(self.poet_id).get_name(), 'type':'poem'}
 
 def create_poet(name):
