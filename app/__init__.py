@@ -5,6 +5,7 @@ import utility
 import config
 
 basedir = config.basedir
+audiodir = '/data/audio'
 wit_access_token = config.WIT_ACCESS_TOKEN
 
 flask_app = Flask(__name__, template_folder='public/template')

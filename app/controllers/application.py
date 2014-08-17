@@ -55,6 +55,8 @@ def typeahead(query=None):
 def save_record():
     blob = request.files['file']
     title = request.form['title']
+    poems_unset = app.audiodir + '/poems-unset/'
+    poems_set = app.audiodir + '/poems-set/'
     if not blob:
         return app.utility.xhr_response({'success':False, 'msg':"Your voice is too powerful. The hamsters got scared. Please try again."}, 200)
     elif not title:
@@ -67,12 +69,11 @@ def save_record():
         if not poem:
             app.flask_app.logger.debug('no poem with title %s' % title.lower())
             raise
-        blob.save('/Users/cinjon/Desktop/code/poetry/audio/poems-unset/' + filename + '.wav')
+        blob.save(poems_unset + filename + '.wav')
         app.flask_app.logger.debug('saved blob')
         audio = app.models.create_audio(poem.id, filename)
         app.flask_app.logger.debug('craeted audio %d' % audio.id)
-        app.utility.mv('/Users/cinjon/Desktop/code/poetry/audio/poems-unset/' + filename + '.wav',
-                       '/Users/cinjon/Desktop/code/poetry/audio/poems-set/' + filename + '.wav')
+        app.utility.mv(poems_unset + filename + '.wav', poems_set + filename + '.wav')
         app.flask_app.logger.debug('moved audio')
         return app.utility.xhr_response({'success':True, 'poem':poem.display()}, 200)
     except Exception, e:
