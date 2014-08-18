@@ -16,7 +16,7 @@
              typeahead-loading="loading" typeahead-min-lenth="3" typeahead-on-select="onSelectSearchTerm($item, $model, $label)">
       <i ng-show="loading" class="glyphicon glyphicon-refresh"></i>
       <div class="search-term" ng-show="typeless">{{searchTerm | title}}</div>
-      <div class="search-button" ng-class="{visible:hasAudio || (!hasHelp && !hasDiscover),
+      <div class="search-button" ng-class="{visible:!loading && (hasAudio || (!hasHelp && !hasDiscover)),
                                            pointer:!typeless}">
         <span ng-if="hasAudio" ng-click="clickPlay()">Play</span>
         <span ng-if="!hasAudio && !hasDiscover"

@@ -89,7 +89,6 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
         $scope.audioPlayer.pause()
       }
       $scope.loading = true;
-      $scope.hasDiscover = false;
       form.append('file', $scope.record.blob, $scope.record.filename);
       form.append('title', $scope.searchedObj.title);
       $.ajax({
@@ -100,7 +99,6 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
         contentType: false
       }).done(function(data) {
         $scope.loading = false;
-        $scope.hasPlay = true;
         console.log('returned');
         console.log(data);
         if (data.success) {
