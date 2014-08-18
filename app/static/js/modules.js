@@ -32,6 +32,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     $scope.isLoading = false;
     $scope.typeless = isTypeless;
     $scope.recording = false;
+    $scope.hasSaved = false;
     $scope.countdown = -1;
     $scope.countdownTimer = function() {
       if ($scope.countdown > 0) {
@@ -71,6 +72,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
         $scope.recording = false;
         $scope.countdown = -1;
         stopRecording();
+        $scope.hasSaved = false;
         $scope.isPlayback = true;
       } else { // Pressed the button. Start the timer.
         $scope.countdown = 1;
@@ -94,6 +96,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
       form.append('title', $scope.searchedObj.title);
       post.postRecord(form).then(function(data) {
         if (data.success) {
+          $scope.hasSaved = true;
           set_poem(data.poem);
         } else {
           $scope.warningTerm = data.msg;
