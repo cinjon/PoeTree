@@ -13,12 +13,11 @@
              ng-show="!typeless" ng-focus="searchFocus($event)" ng-blur="searchBlur($event)"
              placeholder="Search TLP" ng-model="searchTerm"
              typeahead="search.name for search in getTypeaheadValues($viewValue) | filter:$viewValue"
-             typeahead-loading="loading" typeahead-min-lenth="3" typeahead-on-select="onSelectSearchTerm($item, $model, $label)">
-      <i ng-show="loading" class="glyphicon glyphicon-refresh"></i>
+             typeahead-min-lenth="3" typeahead-on-select="onSelectSearchTerm($item, $model, $label)">
       <div class="search-term" ng-show="typeless">{{searchTerm | title}}</div>
-      <div class="search-button" ng-class="{visible:!loading && (hasAudio || (!hasHelp && !hasDiscover)),
+      <div class="search-button" ng-class="{visible:hasAudio || (!hasHelp && !hasDiscover),
                                            pointer:!typeless}">
-        <span ng-if="hasAudio" ng-click="clickPlay()">Play</span>
+        <span ng-if="hasAudio && !isLoading" ng-click="clickPlay()">Play</span>
         <span ng-if="!hasAudio && !hasDiscover"
         ng-click="clickDiscover()">List</span>
         <span ng-if="!hasAudio && hasDiscover">Fake</span>

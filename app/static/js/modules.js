@@ -9,11 +9,11 @@ A. Pass it through to other controllers
 B. Set it up so that if you enter at /blah, you still get the option to switch
 */
 
-angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectives', 'ui.bootstrap'])
+angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectives', 'ui.bootstrap', 'angular-loading-bar'])
   .controller('about', function($scope) {
 
   })
-  .controller('home', function($scope, $sanitize, $http, $location, $timeout, $window, limitToFilter) {
+  .controller('home', function($scope, $sanitize, $http, $location, $timeout, $window, post, limitToFilter) {
     //controller vars
     var scrollCounter = 0;
     var isMicLooping = false;
@@ -29,6 +29,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     if (!$scope.hasVoice) {
       isTypeless = false;
     }
+    $scope.isLoading = false;
     $scope.typeless = isTypeless;
     $scope.recording = false;
     $scope.countdown = -1;
@@ -84,30 +85,21 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     }
     $scope.save = function() {
       // Upload the recording to the server
-      var form = new FormData();
       if (isPlaying) {
         $scope.audioPlayer.pause()
       }
-      $scope.loading = true;
+      $scope.isLoading = true;
+      var form = new FormData();
       form.append('file', $scope.record.blob, $scope.record.filename);
       form.append('title', $scope.searchedObj.title);
-      $.ajax({
-        type: 'POST',
-        url: '/save-record',
-        data: form,
-        processData: false,
-        contentType: false
-      }).done(function(data) {
-        $scope.loading = false;
-        console.log('returned');
-        console.log(data);
+      post.postRecord(form).then(function(data) {
         if (data.success) {
-          console.log('setting poem');
           set_poem(data.poem);
         } else {
           $scope.warningTerm = data.msg;
         }
-      });
+        $scope.isLoading = false;
+      })
     }
     $scope.download = function() {
       // Let the user download their .wav recording
@@ -285,7 +277,6 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     function doPlay() {
       if ($scope.hasPoemAudio()) {
         var src =  'http://www.typelesspoetry.com/' + $scope.searchedObj.audio;
-        console.log($scope.searchedObj);
         setAudioPlayer($scope.audioPlayer, src, audioEndedEvent);
         isPlaying = true;
         $scope.audioPlayer.play();
