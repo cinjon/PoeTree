@@ -75,7 +75,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
         $scope.hasSaved = false;
         $scope.isPlayback = true;
       } else { // Pressed the button. Start the timer.
-        $scope.countdown = 1;
+        $scope.countdown = 2;
         $timeout($scope.countdownTimer, 1000);
       }
     }
@@ -174,6 +174,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
       $scope.hasDiscover = hasDiscover;
       $scope.hasAudio = hasAudio;
       $scope.isPlayback = false;
+      $scope.countdown = -1;
       $scope.record = {'filename':null, 'url':null, 'blob':null};
     }
     function set_poem(poem) {
@@ -317,7 +318,8 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
 
     //Different funcs for clicking because we want to do a check on if typeless is not in effect
     function doClick(f, optional_var) {
-      if (isTypeless || isPlaying) {return;}
+      if (isTypeless) {return;}
+      if (isPlaying) {$scope.audioPlayer.pause()}
       f(optional_var);
     }
     $scope.clickDiscover = function() {
@@ -464,8 +466,8 @@ $window.addEventListener('load', initAudio );
   ]);
 
 function hasGetUserMedia() {
-  return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
-            navigator.mozGetUserMedia || navigator.msGetUserMedia);
+  return (navigator.getUserMedia || navigator.webkitGetUserMedia ||
+          navigator.mozGetUserMedia || navigator.msGetUserMedia);
 }
 
 function getAudioPlayer(domID) {
