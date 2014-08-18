@@ -3,9 +3,12 @@ from flask import render_template, send_from_directory, url_for
 from flask.ext.sqlalchemy import SQLAlchemy
 import utility
 import config
+import os
 
 basedir = config.basedir
 audiodir = '/data/audio'
+if not os.path.exists(audiodir):
+    audiodir = '/Users/cinjon/Desktop/code/poetry/app/static/audio'
 wit_access_token = config.WIT_ACCESS_TOKEN
 
 flask_app = Flask(__name__, template_folder='public/template')

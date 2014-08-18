@@ -69,11 +69,12 @@ def save_record():
         if not poem:
             app.flask_app.logger.debug('no poem with title %s' % title.lower())
             raise
-        blob.save(poems_unset + filename + '.wav')
+        ext = '.wav'
+        blob.save(poems_unset + filename + ext)
         app.flask_app.logger.debug('saved blob')
-        audio = app.models.create_audio(poem.id, filename)
+        audio = app.models.create_audio(poem.id, ext, filename)
         app.flask_app.logger.debug('craeted audio %d' % audio.id)
-        app.utility.mv(poems_unset + filename + '.wav', poems_set + filename + '.wav')
+        app.utility.mv(poems_unset + filename + ext, poems_set + filename + ext)
         app.flask_app.logger.debug('moved audio')
         return app.utility.xhr_response({'success':True, 'poem':poem.display()}, 200)
     except Exception, e:

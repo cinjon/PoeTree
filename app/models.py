@@ -8,19 +8,21 @@ class Audio(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     poem_id = db.Column(db.Integer, db.ForeignKey('poem.id'))
     filename = db.Column(db.Text())
+    ext = db.Column(db.String(8))
     creation_time = db.Column(db.DateTime)
     youtube = db.Column(db.Text()) #in case we decide to upload to youtube
 
-    def __init__(self, poem_title, filename=None):
+    def __init__(self, poem_title, ext, filename=None):
+        self.ext = ext
         self.filename = filename or get_next_audio(poem_title)
         self.creation_time = utility.get_time()
         self.youtube = None
 
-def create_audio(poem_id, filename=None):
+def create_audio(poem_id, ext, filename=None):
     poem = Poem.query.get(poem_id)
     if not poem:
         return
-    audio = Audio(poem.title, filename)
+    audio = Audio(poem.title, ext, filename)
     poem.audios.append(audio)
     db.session.add(audio)
     db.session.commit()
@@ -78,10 +80,7 @@ class Poem(db.Model):
         if self.audios.count() == 0:
             return None
         audio = random.choice(self.audios.all()) #Pick a random audio from this poem
-        filename = 'audio/poems-set/' + audio.filename
-        if os.path.exists(filename + '.m4a'):
-            return filename + '.m4a'
-        return filename + '.wav'
+        return 'audio/poems-set/' + audio.filename + audio.ext
 
     def display(self):
         return {'text':format_to_css(self.text), 'title':self.get_title(),

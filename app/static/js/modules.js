@@ -85,6 +85,10 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     $scope.save = function() {
       // Upload the recording to the server
       var form = new FormData();
+      if (isPlaying) {
+        $scope.audioPlayer.pause()
+      }
+      $scope.loading = true;
       form.append('file', $scope.record.blob, $scope.record.filename);
       form.append('title', $scope.searchedObj.title);
       $.ajax({
@@ -94,6 +98,9 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
         processData: false,
         contentType: false
       }).done(function(data) {
+        $scope.loading = false;
+        console.log('returned');
+        console.log(data);
         if (data.success) {
           set_poem(data.poem);
         } else {
@@ -277,6 +284,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     function doPlay() {
       if ($scope.hasPoemAudio()) {
         var src =  'http://www.typelesspoetry.com/' + $scope.searchedObj.audio;
+        console.log($scope.searchedObj);
         setAudioPlayer($scope.audioPlayer, src, audioEndedEvent);
         isPlaying = true;
         $scope.audioPlayer.play();
