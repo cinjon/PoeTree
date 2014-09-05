@@ -1,0 +1,15 @@
+<div class="body-text">
+  <div class="searchedObj-line" ng-repeat="obj in list track by $index">
+    <div class="list-index communicate" ng-class="{pointer:!typeless}" ng-click="clickChoose($index)">
+      Choose {{$index+1 | numToStr}}
+    </div>
+    <div class="list-info" ng-class="colorClass(obj.type)">
+      <div class="list-name">
+        {{obj.title}}
+      </div>
+      <div class="list-extra">
+        {{obj.extra}}
+      </div>
+    </div>
+  </div>
+</div>

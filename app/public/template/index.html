@@ -30,7 +30,34 @@
 </head>
 <body>
   <div class="container page">
-    <div ng-view></div>
+    <div class="content" ng-controller="home">
+      <div class="search-row">
+        <div id="microphone"></div>
+        <div class="form-control search" ng-class="{communicate:isGreeting, cursor:!typeless}">
+          <div class="search-button" ng-class="{pointer:!typeless,
+          visible:hasBack || (!hasBack && !hasHelp)}">
+            <span ng-if="hasBack" ng-click="clickBack()">Back</span>
+            <span ng-if="!hasBack && !hasHelp" ng-click="clickHelp()">Help</span>
+            <span ng-if="!hasBack && hasHelp">Fake</span>
+          </div>
+          <input id="searchBox" type="text" class="search-term"
+                 ng-show="!typeless" ng-focus="searchFocus($event)" ng-blur="searchBlur($event)"
+                 placeholder="Search TLP" ng-model="searchTerm"
+                 typeahead="search.name for search in getTypeaheadValues($viewValue) | filter:$viewValue"
+                 typeahead-min-lenth="3" typeahead-on-select="onSelectSearchTerm($item, $model, $label)">
+          <div class="search-term" ng-show="typeless">{{searchTerm | title}}</div>
+          <div class="search-button" ng-class="{visible:hasAudio || (!hasHelp
+          && !hasDiscover), pointer:!typeless}">
+            <span ng-if="hasAudio && !isLoading" ng-click="clickPlay()">Play</span>
+            <span ng-if="!hasAudio && !hasDiscover" ng-click="clickDiscover()">List</span>
+            <span ng-if="!hasAudio && hasDiscover">Fake</span>
+          </div>
+        </div>
+        <p class="warning">{{warningTerm}}</p>
+      </div>
+
+      <div class="content-text" ng-view></div>
+    </div>
   </div>
 </body>
 </html>

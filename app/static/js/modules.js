@@ -13,6 +13,9 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
   .controller('about', function($scope) {
 
   })
+  .controller('discover', function($scope) {
+
+  })
   .controller('home', function($scope, $sanitize, $http, $location, $timeout, $window, post, limitToFilter) {
     //controller vars
     var scrollCounter = 0;
@@ -174,7 +177,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
       $scope.hasDiscover = hasDiscover;
       $scope.hasAudio = hasAudio;
       $scope.isPlayback = false;
-      $scope.countdown = -1;
+      $scope.countdown = -2;
       $scope.record = {'filename':null, 'url':null, 'blob':null};
     }
     function set_poem(poem) {
@@ -194,46 +197,6 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     }
     settings_layout(false, false, false, true, false, false);
     settings_notify($scope.greeting, '');
-
-    //Microphone funcs
-    var mic = new Wit.Microphone(document.getElementById("microphone"));
-    mic.onready = function () {
-      if (!isPlaying && isTypeless) {
-        mic.start();
-        isMicLooping = true;
-      }
-    };
-    mic.onaudiostart = function () {
-      $timeout(function() {
-        mic.stop()
-        isMicLooping = false;
-      }, msWitLoop)
-    };
-    mic.onerror = function (err) {
-      console.log("Error: " + err);
-    };
-    mic.onresult = function(intent, entities, res) {
-      if (intent == 'back') {
-        doBack();
-      } else if (intent == 'choose') {
-        doChoose(entities);
-      } else if (intent == 'discover') {
-        doDiscover();
-      } else if (intent == 'find') {
-        doFind(entities, res);
-      } else if (intent == 'help') {
-        doHelp();
-      } else if (intent == 'play') {
-        doPlay();
-      } else if (intent == 'random') {
-        doRandom();
-      } else if (intent == 'scroll') {
-        if ($scope.hasPoem()) {
-          doScroll(entities);
-        }
-      }
-    }
-    mic.connect('X4HVIEQCOLHU6VMRWJAEL5QM27OGGZSW');
 
     //Navigation funcs
     function doBack() {
@@ -446,17 +409,35 @@ function initAudio() {
 
 $window.addEventListener('load', initAudio );
   })
+  .controller('poem', function($scope, $location, $routeParams) {
+    redirectIfNotArgs([$routeParam.poemRoute], $location)
+  })
+  .controller('poet', function($scope, $location, $routeParams) {
+    redirectIfNotArgs([$routeParam.poetRoute], $location)
+  })
   .config([
     '$routeProvider', '$locationProvider',
     function($routeProvider, $locationProvider) {
       $routeProvider
 	.when('/', {
-	  templateUrl: 'static/partials/home.html',
-          controller: 'home'
+	  templateUrl: 'static/partials/instructions.html',
+          controller: 'instructions'
 	})
         .when('/about', {
           templateUrl: 'static/partials/about.html',
           controller: 'about'
+        })
+        .when('/discover', {
+          templateUrl: 'static/partials/discover.html',
+          controller: 'discover'
+        })
+        .when('/poet/:poetRoute', {
+          templateUrl: 'static/partials/poet.html',
+          controller: 'poet'
+        })
+        .when('/poem/:poemRoute', {
+          templateUrl: 'static/partials/poem.html',
+          controller: 'poem'
         })
 	.otherwise({
 	  redirectTo: '/'
@@ -486,3 +467,54 @@ function setAudioPlayer(player, src, endedCallBack) {
 audiojs.events.ready(function() {
   var as = audiojs.createAll();
 })
+
+function redirectIfNotArgs(params, $location) {
+  for (param in params) {
+    console.log(param);
+    if (!params[param] || params[param] == '') {
+      $location('/')
+    }
+  }
+}
+
+function getMicrophone() {
+  //Microphone funcs
+  var mic = new Wit.Microphone(document.getElementById("microphone"));
+  mic.onready = function () {
+    if (!isPlaying && isTypeless) {
+      mic.start();
+      isMicLooping = true;
+    }
+  };
+  mic.onaudiostart = function () {
+    $timeout(function() {
+      mic.stop()
+      isMicLooping = false;
+    }, msWitLoop)
+  };
+  mic.onerror = function (err) {
+    console.log("Error: " + err);
+  };
+  mic.onresult = function(intent, entities, res) {
+    if (intent == 'back') {
+      doBack();
+    } else if (intent == 'choose') {
+      doChoose(entities);
+    } else if (intent == 'discover') {
+      doDiscover();
+    } else if (intent == 'find') {
+      doFind(entities, res);
+    } else if (intent == 'help') {
+      doHelp();
+    } else if (intent == 'play') {
+      doPlay();
+    } else if (intent == 'random') {
+      doRandom();
+    } else if (intent == 'scroll') {
+      if ($scope.hasPoem()) {
+        doScroll(entities);
+      }
+    }
+  }
+  mic.connect('X4HVIEQCOLHU6VMRWJAEL5QM27OGGZSW');
+}

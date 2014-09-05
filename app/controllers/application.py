@@ -21,6 +21,9 @@ def page_not_found(e):
 @app.flask_app.route('/')
 @app.flask_app.route('/about')
 @app.flask_app.route('/home')
+@app.flask_app.route('/discover')
+@app.flask_app.route('/poet')
+@app.flask_app.route('/poem')
 def basic_pages(**kwargs):
     return make_response(open('app/public/template/index.html').read())
 

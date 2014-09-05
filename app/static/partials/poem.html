@@ -1,0 +1,13 @@
+<div ng-show="hasAudio || isPlayback">
+  <audio id="audio-src"></audio>
+</div>
+<div class="supplementary-info">
+  <span class="communicate" ng-class="{pointer:!typeless}"
+  ng-click="clickName({ty:'poet', 'name':searchedObj.poet})">{{searchedObj.poet}}</span>
+  <span ng-show="hasVoice" class="record-button communicate pointer"
+  ng-click="toggleRecord(searchedObj)" ng-class="{red:recording}">{{recordMessage}}</span>
+  <span class="record-button communicate pointer" ng-click="playback()" ng-show="isPlayback && !hasSaved">Playback</span>
+  <span class="record-button communicate pointer" ng-click="save()" ng-show="isPlayback && !hasSaved">Save</span>
+  <a id="download-link" ng-click="download()"><span class="record-button communicate pointer" ng-show="isPlayback">Download</span></a>
+</div>
+<div class="poem-text body-text" ng-bind-html="sanitize(searchedObj.text)"></div>
