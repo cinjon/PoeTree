@@ -1,312 +1,96 @@
 'use strict';
 
-var msWitLoop = 800;
-var scrollAmt = 280;
-
-/*
-The Home Controller is monolithic at this point. I should cut it down to size by splitting up the different parts. The tricky part is what to do with the Mic and how to:
-A. Pass it through to other controllers
-B. Set it up so that if you enter at /blah, you still get the option to switch
-*/
-
 angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectives', 'ui.bootstrap', 'angular-loading-bar'])
-  .controller('about', function($scope) {
+  .controller('main', function($scope, $http, $location, $window) {
+    $scope.hasBack = false;
+    $scope.hasHelp = false;
+    $scope.hasAudio = false;
+    $scope.hasDiscover = false;
+    $scope.isPlaying = false;
+    var poemAudio = new PoemAudio($window);
 
-  })
-  .controller('discover', function($scope) {
-
-  })
-  .controller('home', function($scope, $sanitize, $http, $location, $timeout, $window, post, limitToFilter) {
-    //controller vars
-    var scrollCounter = 0;
-    var isMicLooping = false;
-    var isPlaying = false;
-    var isTypeless = false;
-
-    //Scope vars
-    $scope.searchTerm = '';
-    $scope.greeting = "Search TLP"
-    $scope.audioPlayer = getAudioPlayer('audio-src');
-    $scope.hasVoice = hasGetUserMedia();
-    initAudio();
-    if (!$scope.hasVoice) {
-      isTypeless = false;
+    $scope.setVars = function(hasBack, hasHelp, hasAudio, hasDiscover) {
+      $scope.hasBack = hasBack;
+      $scope.hasHelp = hasHelp;
+      $scope.hasAudio = hasAudio;
+      $scope.hasDiscover = hasDiscover;
     }
-    $scope.isLoading = false;
-    $scope.typeless = isTypeless;
-    $scope.recording = false;
-    $scope.hasSaved = false;
-    $scope.countdown = -1;
-    $scope.countdownTimer = function() {
-      if ($scope.countdown > 0) {
-        $scope.countdown--;
-        if ($scope.countdown == 0) {
-          $scope.recording = true;
-          startRecording();
-        }
-        $timeout($scope.countdownTimer, 1000);
+    $scope.setObject = function(poem, poet, searchTerm) {
+      $scope.poem = poem;
+      $scope.poet = poet;
+      $scope.searchTerm = searchTerm;
+    }
+    $scope.setObject(null, null, null);
+
+    $scope.$watch('poem', function(newval) {
+      console.log('new poem')
+      console.log(newval);
+      if (newval && newval.audio) {
+        poemAudio.initAudioPlayer('audio-src')
+        var src =  'http://www.typelesspoetry.com/' + newval.audio;
+        poemAudio.setAudioPlayer(src, function() {$scope.isPlaying = false;});
       }
-    }
-    $scope.isPlayback = false;
-    $scope.record = {'filename':null, 'url':null, 'blob':null}
+    });
 
-    //Scope boolean funcs
-    $scope.isGreeting = function() {
-      return $scope.searchTerm == $scope.greeting;
+    function doClick(f, optional_var) {
+      if ($scope.isPlaying) {$scope.audioPlayer.pause()}
+      f(optional_var);
     }
-    $scope.hasPoem = function() {
-      return $scope.hasSearchedObj && $scope.searchedObj.type == "poem";
-    }
-    $scope.hasPoemAudio = function() {
-      return $scope.hasPoem() && $scope.searchedObj.audio != null;
-    }
-
-    //Scope action funcs
-    $scope.toggleTypeless = function() {
-      $scope.typeless = !$scope.typeless;
-      isTypeless = $scope.typeless;
-    }
-    $scope.toggleRecord = function(poem) {
-      $scope.audioPlayer.pause();
-      $scope.isPlayback = false;
-      if ($scope.countdown > 0) { //Canceled during countdown
-        $scope.countdown = -1;
-      } else if ($scope.recording) { //Completed recording
-        $scope.recording = false;
-        $scope.countdown = -1;
-        stopRecording();
-        $scope.hasSaved = false;
-        $scope.isPlayback = true;
-      } else { // Pressed the button. Start the timer.
-        $scope.countdown = 2;
-        $timeout($scope.countdownTimer, 1000);
-      }
-    }
-    $scope.playback = function() {
-      // Play the recording back to the user
-      setAudioPlayer($scope.audioPlayer, $scope.record.url, audioEndedEvent);
-      isPlaying = true;
-      $scope.audioPlayer.play();
-    }
-    $scope.save = function() {
-      // Upload the recording to the server
-      if (isPlaying) {
-        $scope.audioPlayer.pause()
-      }
-      $scope.isLoading = true;
-      var form = new FormData();
-      form.append('file', $scope.record.blob, $scope.record.filename);
-      form.append('title', $scope.searchedObj.title);
-      post.postRecord(form).then(function(data) {
-        if (data.success) {
-          $scope.hasSaved = true;
-          set_poem(data.poem);
+    function doRandom() {
+      $http.get('/random-poem-route', {}).then(function(result) {
+        if (!result.data.success) {
+          $scope.warningTerm = "Oh no, there was an error. Please try again."
         } else {
-          $scope.warningTerm = data.msg;
+          $location.path('/poem/' + result.data.route);
         }
-        $scope.isLoading = false;
       })
     }
-    $scope.download = function() {
-      // Let the user download their .wav recording
-      $('a#download-link').attr({target: '_blank', href  : $scope.record.url, download: $scope.record.filename});
+    function doBack() {
+      //Returns to poet page from poem page
+      if (!$scope.poet || !$scope.poet.route) {
+        return;
+      }
+      $location.path('/poet/' + $scope.poet.route);
     }
-    $scope.sanitize = function(txt) {
-      if (txt) {
-        return $sanitize(txt);
+    function doPlay() {
+      if ($scope.poem && $scope.poem.audio != null) {
+        poemAudio.playAudio()
+        $scope.isPlaying = true;
       }
     }
 
-    //Scope typeahead funcs
-    $scope.searchFocus = function(event) {
-      event.target.value = '';
+    $scope.clickRandom = function() {
+      doClick(doRandom);
     }
-    $scope.searchBlur = function(event) {
-      event.target.value = $scope.searchTerm;
+    $scope._clickBack = function() {
+      doClick(doBack);
     }
-    $scope.getTypeaheadValues = function(val) {
+    $scope._clickPlay = function() {
+      doClick(doPlay);
+    }
+
+    $scope._getTypeaheadValues = function(val) {
       return $http.get('/typeahead/' + val, {}).then(function(result) {
         var poets = result.data.poets || [];
         var poems = result.data.poems || [];
         return poets.concat(poems);
       });
     }
-    $scope.onSelectSearchTerm = function(item, model, label) {
-      httpGetItem(item);
+    $scope._onSelectSearchTerm = function(item, model, label) {
+      $location.path('/' + item.ty + '/' + item.route)
     }
+    $scope._searchFocus = function(event) {
+      event.target.value = '';
+    }
+    $scope._searchBlur = function(event) {
+      event.target.value = $scope.searchTerm;
+    }
+  })
+  .controller('about', function($scope) {
 
-    //Scope watch
-    $scope.$watch('typeless', function(newvar) {
-      $scope.typeToggleMessage = newvar ? "I really really want to use my hands. Ok" : "I'm an intrepid voice explorer. Fantastic";
-      if ($scope.typeless) {
-        mic.start();
-      } else {
-        mic.stop();
-      }
-    });
-    $scope.$watch('countdown', function(newvar) {
-      if (newvar > 0) {
-        $scope.recordMessage = 'Ready in ' + newvar;
-      } else if ($scope.recording) {
-        $scope.recordMessage = 'Recording';
-      } else if ($scope.isPlayback) {
-        $scope.recordMessage = 'Re-record';
-      } else {
-        $scope.recordMessage = 'Record';
-      }
-    });
-
-    //Helper funcs to make changes more regular
-    function settings_notify(searchTerm, warningTerm) {
-      //Set searchTerm, warningTerm
-      $scope.searchTerm = searchTerm;
-      $scope.warningTerm = warningTerm;
-    }
-    function audioEndedEvent() {
-      isPlaying = false;
-      if ($scope.typeless) {
-        mic.start();
-      }
-    }
-    function settings_layout(hasSearchedObj, hasList, hasBack, hasHelp, hasDiscover, hasAudio) {
-      //Set layout settings
-      $scope.hasSearchedObj = hasSearchedObj;
-      $scope.hasList = hasList;
-      $scope.hasBack = hasBack;
-      $scope.hasHelp = hasHelp;
-      $scope.hasDiscover = hasDiscover;
-      $scope.hasAudio = hasAudio;
-      $scope.isPlayback = false;
-      $scope.countdown = -2;
-      $scope.record = {'filename':null, 'url':null, 'blob':null};
-    }
-    function set_poem(poem) {
-      $scope.searchedObj = poem;
-      settings_layout(true, false, false, false, false, poem.audio != null);
-      settings_notify(poem.title, '');
-    }
-    function set_poet(poet) {
-      if (poet.poems.length == 1) {
-        set_poem(poet.poems[0]);
-      } else {
-        $scope.searchedObj = poet;
-        $scope.list = poet.poems;
-        settings_layout(true, true, false, false, false, false);
-        settings_notify(poet.name, '');
-      }
-    }
-    settings_layout(false, false, false, true, false, false);
-    settings_notify($scope.greeting, '');
-
-    //Navigation funcs
-    function doBack() {
-      //return back from poem page to poet page
-      if ($scope.hasBack) {
-        settings_notify($scope.greeting, '');
-        settings_layout(false, true, false, false, false, false);
-      }
-    }
-    function doChoose(entities) {
-      //choose one of the options already presented on the poet page, if exist
-      if (!$scope.hasList) {
-        return;
-      } else if ('number' in entities) {
-        var number = entities['number']['value'] - 1;
-        if (number > $scope.list.length) {
-          return;
-        }
-        set_poem($scope.list[number]);
-        $scope.hasBack = true;
-      } else {
-        $scope.warningTerm = "Sorry, our hamsters are bad with numbers. Please repeat that.";
-      }
-    }
-    function doDiscover() {
-      settings_notify($scope.greeting, '');
-      settings_layout(false, false, false, false, true, false);
-    }
-    function doFind(entities, res) {
-      if ('poet' in entities) {
-        name = entities['poet']['value']
-      } else if ('poem' in entities) {
-        name = entities['poem']['value']
-      } else if (res['msg_body'] != '') {
-        name = res['msg_body'];
-      } else {
-        return;
-      }
-      httpFind(name);
-    }
-    function doHelp() {
-      settings_notify($scope.greeting, '');
-      settings_layout(false, false, false, true, false, false);
-    }
-    function doPlay() {
-      if ($scope.hasPoemAudio()) {
-        var src =  'http://www.typelesspoetry.com/' + $scope.searchedObj.audio;
-        setAudioPlayer($scope.audioPlayer, src, audioEndedEvent);
-        isPlaying = true;
-        $scope.audioPlayer.play();
-      }
-    }
-    function doRandom() {
-      $http.get('/randompoem', {}).then(function(result) {
-        if (!result.data.success) {
-          $scope.warningTerm = "Oh no, there was an error. Please try again."
-        } else {
-          set_poem(result.data.poem);
-        }
-      });
-    }
-    function doScroll(entities) {
-      //Scroll in some direction. Uses 'on' for down, 'off' for up
-      var direction;
-      var entities = entities['on_off'];
-      if (!entities) {
-        direction = 'on';
-      } else {
-        direction = entities['value'];
-      }
-
-      if (direction == 'off') {
-        scrollCounter -= scrollAmt;
-        if (scrollCounter < 0) {
-          scrollCounter = 0;
-        }
-      } else {
-        scrollCounter += scrollAmt;
-      }
-      $('.poem-text').scrollTop($('.poem-text').offset().top + scrollCounter);
-    }
-
-    //Different funcs for clicking because we want to do a check on if typeless is not in effect
-    function doClick(f, optional_var) {
-      if (isTypeless) {return;}
-      if (isPlaying) {$scope.audioPlayer.pause()}
-      f(optional_var);
-    }
-    $scope.clickDiscover = function() {
-      doClick(doDiscover);
-    }
-    $scope.clickHelp = function() {
-      doClick(doHelp);
-    }
-    $scope.clickPlay = function() {
-      doClick(doPlay);
-    }
-    $scope.clickRandom = function() {
-      doClick(doRandom);
-    }
-    $scope.clickBack = function() {
-      doClick(doBack);
-    }
-    $scope.clickChoose = function(index) {
-      doClick(doChoose, {'number':{'value':index+1}});
-    }
-    $scope.clickName = function(obj) {
-      doClick(httpGetItem, obj);
-    }
-
+  })
+  .controller('discover', function($scope, $http) {
+    $scope.$parent.setVars(false, false, false, true);
     $http.get('/all', {}).then(function(result) {
       var poems = result.data.poems;
       $scope.poemNamesFirst = poems.slice(0,Math.ceil(poems.length/3))
@@ -314,130 +98,164 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
       $scope.poemNamesThird = poems.slice(2*Math.ceil(poems.length/3));
       $scope.poets = result.data.poets;
     });
+  })
+  .controller('home', function($scope) {
+    $scope.$parent.setVars(false, true, false, false);
+    $scope.$parent.setObject(null, null, '');
 
-    function httpFind(name) {
-      settings_notify(name, '');
-      $http.get('/find/' + name, {}).then(function(result) {
-        // Return results could be a list of poems and poets, at most five of each:
-        // [{text:"", name:"", type:"poem", poet:"by <Poet>"}, ..., {type:"poet", poems:[{...}], name:", extra:"# Poems"}]
-        // Or a single poem or a single poet (which will have a list of poems)
-        if (!result.data.success) {
-          $scope.warningTerm = "Our hamsters didn't find any results. Please try again."
-        } else if (result.data.type == 'single-poem') {
-          set_poem(result.data.poem);
-        } else if (result.data.type == 'single-poet') {
-          set_poet(result.data.poet);
-        } else if (result.data.type == 'multi') {
-          $scope.list = result.data.poems.concat(result.data.poets);
-          if ($scope.list.length == 1) {
-            if (result.data.poems.length == 1) {
-              //Just one return. It's a poem, show it.
-              set_poem(result.data.poems[0]);
-            } else {
-              //Just one return. It's a poet, show it.
-              set_poet(result.data.poets[0]);
-            }
-          } else {
-            settings_layout(false, true, false, false, false, false);
-            settings_notify(name, '');
-          }
-        }
-      });
+    $scope.clickRandom = function() {
+      $scope.$parent.clickRandom();
     }
-    function httpGetItem(item) {
-      var ty = item.ty;
-      $http.get('/get_data/' + ty + '/' + item.name, {}).then(function(result) {
-        if (!result.data.success) {return;} //TODO
-        if (ty == 'poet') {
-          set_poet(result.data.data);
-        } else if (ty == 'poem') {
-          set_poem(result.data.data);
-        }
-      });
+  })
+  .controller('poem', function($scope, $location, $routeParams, $sanitize, $window, $timeout, Poem, Post) {
+    redirectIfNotArgs([$routeParams.route], $location)
+
+    var poemAudio = new PoemAudio($window);
+    $window.addEventListener('load', poemAudio.initAudioRecorder());
+    $window.addEventListener('load', poemAudio.initAudioPlayer('audio-src'));
+
+    var setPoem = function(data) {
+      $scope.poem = data;
+      $scope.$parent.setObject(data, {'route':data['poet_route']}, data.title);
     }
 
+    //Check routeParams for back, if so, set that var
+    var poemQuery = Poem.get({route:$routeParams.route}, function(result) {
+      var data = result.data;
+      var hasBack = $routeParams.hasBack;
+      var hasAudio = data.audio != null;
+      setPoem(data);
+      $scope.$parent.setVars(hasBack, false, hasAudio, false);
+      $scope.hasAudio = data.audio == null;
+      $scope.hasVoice = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+      if ($scope.hasVoice) {
+        $scope.hasPlayback = false;
+        $scope.hasSaved = false;
+        $scope.recording = false;
+        $scope.countdown = -1;
+      }
 
-    $window.audioContext = $window.AudioContext || $window.webkitAudioContext;
-    var audioContext = new AudioContext();
-    var audioInput = null,
-    realAudioInput = null,
-    inputPoint = null,
-    audioRecorder = null;
+      if (hasBack) {
+        $location.url($location.path()); //Clear out hasBack
+      }
+    });
 
-function saveAudio() {
-  audioRecorder.exportWAV(doneEncoding);
-}
+    $scope.countdownTimer = function() {
+      if ($scope.countdown > 0) {
+        $scope.countdown--;
+        if ($scope.countdown == 0) {
+          $scope.recording = true;
+          poemAudio.startRecording();
+        }
+        $timeout($scope.countdownTimer, 1000);
+      }
+    }
+    $scope.$watch('countdown', function(newvar) {
+      if (newvar > 0) {
+        $scope.recordMessage = 'Ready in ' + newvar;
+      } else if ($scope.recording) {
+        $scope.recordMessage = 'Recording';
+      } else if ($scope.hasPlayback) {
+        $scope.recordMessage = 'Re-record';
+      } else {
+        $scope.recordMessage = 'Record';
+      }
+    });
 
-function doneEncoding(blob) {
-  $scope.record.filename = $scope.searchedObj.next_audio; //Might bei n searchModel, ugh. unify these
-  $scope.record.url = (window.URL || window.webkitURL).createObjectURL(blob);
-  $scope.record.blob = blob;
-}
+    $scope.$watch('isPlaying', function(newVal) {
+      $scope.$parent.isPlaying = newVal;
+    });
 
-function stopRecording() {
-  audioRecorder.stop();
-  audioRecorder.getBuffer(saveAudio);
-}
+    $scope.playback = function() {
+      // Play the recording back to the user
+      var record = poemAudio.getRecord();
+      poemAudio.setAudioPlayer(record.url, function() {$scope.isPlaying = false;});
+      poemAudio.playAudio();
+      $scope.isPlaying = true;
+    }
+    $scope.save = function() {
+      // Upload the recording to the server
+      console.log('saving')
+      if ($scope.isPlaying) {console.log('pausing'); poemAudio.pauseAudio(); console.log('paused')}
+      $scope.isLoading = true;
 
-function startRecording() {
-  audioRecorder.clear();
-  audioRecorder.record();
-}
+      var form = new FormData();
+      var record = poemAudio.getRecord();
+      form.append('file', record.blob, $scope.poem.next_audio);
+      form.append('title', $scope.poem.title);
 
-function gotStream(stream) {
-  inputPoint = audioContext.createGain();
-  // Create an AudioNode from the stream.
-  realAudioInput = audioContext.createMediaStreamSource(stream);
-  audioInput = realAudioInput;
-  audioInput.connect(inputPoint);
-  audioRecorder = new Recorder(inputPoint);
-}
-
-function initAudio() {
-  if (!navigator.getUserMedia)
-    navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-  if (!navigator.cancelAnimationFrame)
-    navigator.cancelAnimationFrame = navigator.webkitCancelAnimationFrame || navigator.mozCancelAnimationFrame;
-  if (!navigator.requestAnimationFrame)
-    navigator.requestAnimationFrame = navigator.webkitRequestAnimationFrame || navigator.mozRequestAnimationFrame;
-
-  navigator.getUserMedia({audio:true}, gotStream, function(e) {
-    alert('Error getting audio');
-    console.log(e);
-  });
-}
-
-$window.addEventListener('load', initAudio );
+      Post.postRecord(form).then(function(data) {
+        if (data.data.success) {
+          $scope.hasSaved = true;
+          setPoem(data.data.poem);
+        } else {
+          $scope.warningTerm = data.data.msg;
+        }
+        $scope.isLoading = false;
+      })
+    }
+    $scope.download = function() {
+      // Let the user download their .wav recording
+      var record = poemAudio.getRecord();
+      $('a#download-link').attr({target:'_blank', href:record.url, download:$scope.poem.next_audio});
+    }
+    $scope.sanitize = function(txt) {
+      if (txt) {
+        return $sanitize(txt);
+      }
+    }
+    $scope.toggleRecord = function(poem) {
+      poemAudio.pauseAudio();
+      $scope.hasPlayback = false;
+      if ($scope.countdown > 0) { //Canceled during countdown
+        $scope.countdown = -1;
+      } else if ($scope.recording) { //Completed recording
+        $scope.recording = false;
+        $scope.countdown = -1;
+        poemAudio.stopRecording();
+        $scope.hasSaved = false;
+        $scope.hasPlayback = true;
+      } else { // Pressed the button. Start the timer.
+        $scope.countdown = 2;
+        $timeout($scope.countdownTimer, 1000);
+      }
+    }
   })
-  .controller('poem', function($scope, $location, $routeParams) {
-    redirectIfNotArgs([$routeParam.poemRoute], $location)
-  })
-  .controller('poet', function($scope, $location, $routeParams) {
-    redirectIfNotArgs([$routeParam.poetRoute], $location)
+  .controller('poet', function($scope, $location, $routeParams, Poet) {
+    redirectIfNotArgs([$routeParams.route], $location)
+
+    var poetQuery = Poet.get({route:$routeParams.route}, function(result) {
+      var data = result.data;
+      $scope.poet = data;
+      $scope.$parent.setVars(false, false, false, false);
+      $scope.$parent.setObject(null, data, data.name);
+      $scope.list = data.poems;
+    });
   })
   .config([
     '$routeProvider', '$locationProvider',
     function($routeProvider, $locationProvider) {
       $routeProvider
 	.when('/', {
-	  templateUrl: 'static/partials/instructions.html',
-          controller: 'instructions'
+	  templateUrl: '/static/partials/instructions.html',
+          controller: 'home'
 	})
         .when('/about', {
-          templateUrl: 'static/partials/about.html',
+          templateUrl: '/static/partials/about.html',
           controller: 'about'
         })
         .when('/discover', {
-          templateUrl: 'static/partials/discover.html',
+          templateUrl: '/static/partials/discover.html',
           controller: 'discover'
         })
-        .when('/poet/:poetRoute', {
-          templateUrl: 'static/partials/poet.html',
+        .when('/poet/:route', {
+          templateUrl: '/static/partials/poet.html',
           controller: 'poet'
         })
-        .when('/poem/:poemRoute', {
-          templateUrl: 'static/partials/poem.html',
-          controller: 'poem'
+        .when('/poem/:route', {
+          templateUrl: '/static/partials/poem.html',
+          controller: 'poem',
+          reloadOnSearch: false
         })
 	.otherwise({
 	  redirectTo: '/'
@@ -446,75 +264,91 @@ $window.addEventListener('load', initAudio );
     }
   ]);
 
-function hasGetUserMedia() {
-  return (navigator.getUserMedia || navigator.webkitGetUserMedia ||
-          navigator.mozGetUserMedia || navigator.msGetUserMedia);
-}
-
-function getAudioPlayer(domID) {
-  var player = document.getElementById(domID);
-  setAudioPlayer(player, '', null);
-  return player;
-}
-function setAudioPlayer(player, src, endedCallBack) {
-  player.src = src;
-  player.load();
-  if (endedCallBack) {
-    player.addEventListener('ended', endedCallBack)
-  }
-}
-
 audiojs.events.ready(function() {
   var as = audiojs.createAll();
 })
 
 function redirectIfNotArgs(params, $location) {
-  for (param in params) {
-    console.log(param);
+  for (var param in params) {
     if (!params[param] || params[param] == '') {
-      $location('/')
+      $location.path('/')
     }
   }
 }
 
-function getMicrophone() {
-  //Microphone funcs
-  var mic = new Wit.Microphone(document.getElementById("microphone"));
-  mic.onready = function () {
-    if (!isPlaying && isTypeless) {
-      mic.start();
-      isMicLooping = true;
-    }
+function PoemAudio($window) {
+  $window.audioContext = $window.AudioContext || $window.webkitAudioContext;
+  var audioRecorder = null;
+  var audioPlayer = null;
+  var record = {'url':null, 'blob':null};
+
+  this.getRecord = function() {
+    return record;
+  }
+
+  this.initAudioRecorder = function() {
+    if (!navigator.getUserMedia)
+      navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+    if (!navigator.cancelAnimationFrame)
+      navigator.cancelAnimationFrame = navigator.webkitCancelAnimationFrame || navigator.mozCancelAnimationFrame;
+    if (!navigator.requestAnimationFrame)
+      navigator.requestAnimationFrame = navigator.webkitRequestAnimationFrame || navigator.mozRequestAnimationFrame;
+
+    var callback = gotStream;
+    navigator.getUserMedia({audio:true}, callback, function(e) {
+      alert('Error getting audio');
+      console.log(e);
+    });
   };
-  mic.onaudiostart = function () {
-    $timeout(function() {
-      mic.stop()
-      isMicLooping = false;
-    }, msWitLoop)
-  };
-  mic.onerror = function (err) {
-    console.log("Error: " + err);
-  };
-  mic.onresult = function(intent, entities, res) {
-    if (intent == 'back') {
-      doBack();
-    } else if (intent == 'choose') {
-      doChoose(entities);
-    } else if (intent == 'discover') {
-      doDiscover();
-    } else if (intent == 'find') {
-      doFind(entities, res);
-    } else if (intent == 'help') {
-      doHelp();
-    } else if (intent == 'play') {
-      doPlay();
-    } else if (intent == 'random') {
-      doRandom();
-    } else if (intent == 'scroll') {
-      if ($scope.hasPoem()) {
-        doScroll(entities);
-      }
+
+  this.initAudioPlayer = function(domID) {
+    audioPlayer = document.getElementById(domID);
+    this.setAudioPlayer('', null);
+  }
+
+  this.setAudioPlayer = function(src, callback) {
+    audioPlayer.src = src;
+    audioPlayer.load();
+    if (callback) {
+      audioPlayer.addEventListener('ended', callback);
     }
   }
-  mic.connect('X4HVIEQCOLHU6VMRWJAEL5QM27OGGZSW');
+
+  this.playAudio = function() {
+    audioPlayer.play();
+  };
+
+  this.pauseAudio = function() {
+    audioPlayer.pause();
+  };
+
+  this.stopRecording = function() {
+    audioRecorder.stop();
+    audioRecorder.getBuffer(saveAudio);
+  };
+
+  this.startRecording = function() {
+    audioRecorder.clear();
+    audioRecorder.record();
+  };
+
+  var saveAudio = function() {
+    audioRecorder.exportWAV(doneEncoding);
+  };
+
+  var gotStream = function(stream) {
+    var audioContext = new AudioContext();
+    var inputPoint = audioContext.createGain();
+    var realAudioInput = audioContext.createMediaStreamSource(stream);
+    var audioInput = realAudioInput;
+    audioInput.connect(inputPoint);
+    audioRecorder = new Recorder(inputPoint);
+  };
+
+  var doneEncoding = function(blob) {
+    console.log('in doneEncoding');
+    record.url = (window.URL || window.webkitURL).createObjectURL(blob);
+    record.blob = blob;
+    console.log(record);
+  }
 }

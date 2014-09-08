@@ -1,6 +1,6 @@
 (function(window){
 
-  var WORKER_PATH = 'static/lib/microphone/recorderWorker.js';
+  var WORKER_PATH = '/static/lib/microphone/recorderWorker.js';
 
   var Recorder = function(source, cfg){
     var config = cfg || {};

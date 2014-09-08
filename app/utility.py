@@ -3,6 +3,7 @@ import os
 import datetime
 import random
 import string
+from unidecode import unidecode
 from flask import jsonify, Response
 
 ########
@@ -46,13 +47,17 @@ def xhr_response(data, code):
 # Useful Funcs
 ########
 
-dashify_remove = set(['"', "'", '?', '.', '!', ','])
+_dashify_remove = set(['"', "'", '?', '.', '!', ','])
+_dashify_space  = set(['(', ')', '[', ']'])
 def dashify(name):
     # Dashifies a name for routing purposes, e.g.
     # 'Because I cannot' --> 'because-i-cannot'
     # '"why do i love" you, sir?' --> 'why-do-i-love-you-sir'
-    newname = ''.join([char for char in name.lower().strip() if char not in dashify_remove])
-    parts = [p for p in newname.split() if not p == '']
+    # '[i carry your heart with me(i carry it in]' --> 'i-carry-your-heart-with-me-i-carry-it-in'
+    newname = ''.join([char for char in name.lower().strip() if char not in _dashify_remove])
+    for space in _dashify_space:
+        newname = newname.replace(space, ' ')
+    parts = [unidecode(p) for p in newname.split() if not p == '']
     return '-'.join(parts)
 
 def mv(start, end):

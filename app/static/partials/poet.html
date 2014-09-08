@@ -1,14 +1,16 @@
 <div class="body-text">
-  <div class="searchedObj-line" ng-repeat="obj in list track by $index">
-    <div class="list-index communicate" ng-class="{pointer:!typeless}" ng-click="clickChoose($index)">
-      Choose {{$index+1 | numToStr}}
-    </div>
-    <div class="list-info" ng-class="colorClass(obj.type)">
+  <div class="poem-list-line" ng-repeat="poem in list track by $index">
+    <a href="/poem/{{poem.route}}?hasBack">
+      <div class="list-index communicate">
+        Choose {{$index+1 | numToStr}}
+      </div>
+    </a>
+    <div class="list-info">
       <div class="list-name">
-        {{obj.title}}
+        {{poem.title}}
       </div>
       <div class="list-extra">
-        {{obj.extra}}
+        {{poem.extra}}
       </div>
     </div>
   </div>

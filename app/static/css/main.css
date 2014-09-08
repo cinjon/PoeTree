@@ -8,7 +8,11 @@ body {
 }
 
 .communicate {
-    color: rgba(9, 14, 207, .5);
+    color: rgba(9, 14, 207, .5) !important;
+    text-decoration:none !important;
+}
+a.communicate, span.communicate {
+    cursor:pointer;
 }
 
 .content {
@@ -31,6 +35,7 @@ body {
     font-size:18px;
     position:relative;
     top:6px;
+    cursor:pointer;
 }
 
 .record-button {
@@ -52,6 +57,7 @@ body {
 
 .discover-line {
     height:27px;
+    cursor:pointer;
 }
 
 .discover {
@@ -69,7 +75,7 @@ body {
     border:0;
 }
 
-.searchedObj-line {
+.poem-list-line {
     clear:both;
     height:45px;
 }
@@ -82,7 +88,6 @@ body {
 .search {
     height: 50px;
     font-size:25px;
-    cursor: none;
     border-color: rgba(9, 194, 207, .5);
 }
 
@@ -119,14 +124,6 @@ body {
 
 .text-align-right {
     text-align:right;
-}
-
-.pointer {
-    cursor: pointer;
-}
-
-.cursor {
-    cursor: default;
 }
 
 .red {

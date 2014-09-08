@@ -1,6 +1,6 @@
 import app
 import os
-from flask import send_from_directory, render_template, make_response, request
+from flask import send_from_directory, render_template, make_response, request, abort
 from  sqlalchemy.sql.expression import func, select
 import random
 
@@ -22,23 +22,34 @@ def page_not_found(e):
 @app.flask_app.route('/about')
 @app.flask_app.route('/home')
 @app.flask_app.route('/discover')
-@app.flask_app.route('/poet')
-@app.flask_app.route('/poem')
 def basic_pages(**kwargs):
     return make_response(open('app/public/template/index.html').read())
 
-@app.flask_app.route('/randompoem')
-def randompoem():
+def make_response_by_route(route, model):
+    if route and model.query.filter(model.route == route).first():
+        return make_response(open('app/public/template/index.html').read())
+
+@app.flask_app.route('/poet/<route>')
+def poet(route):
+    return make_response_by_route(route, app.models.Poet)
+
+@app.flask_app.route('/poem/<route>')
+def poem(route):
+    return make_response_by_route(route, app.models.Poem)
+    # abort(404)
+
+@app.flask_app.route('/random-poem-route')
+def random_poem_route():
     # p = app.models.Poem.query.order_by(func.random()).first() #Get random poem
     import random
-    poems = [p for p in app.models.Poem.query.all() if p.audios.count() > 0]
-    random.shuffle(poems)
-    p = poems[0]
-    if not p:
+    poem_routes = [p.route for p in app.models.Poem.query.all() if p.audios.count() > 0]
+    random.shuffle(poem_routes)
+    route = poem_routes[0]
+    if not route:
         return app.utility.xhr_response(
             {'success':False}, 400)
     return app.utility.xhr_response(
-        {'success':True, 'poem':p.display()}, 200)
+        {'success':True, 'route':route}, 200)
 
 @app.flask_app.route('/typeahead/<query>')
 @app.flask_app.route('/all')
@@ -50,8 +61,8 @@ def typeahead(query=None):
         poets = get_matching(poets, query)[:typeahead_limit]
         poems = get_matching(poems, query)[:typeahead_limit]
 
-    poets = [{'name':p.get_name(), 'ty':'poet'} for p in sorted(poets, key=lambda p:len(p.name))]
-    poems = [{'name':p.get_title(), 'ty':'poem'} for p in sorted(poems, key=lambda p:len(p.title), reverse=True)]
+    poets = [{'name':p.get_name(), 'ty':'poet', 'route':p.route} for p in sorted(poets, key=lambda p:len(p.name))]
+    poems = [{'name':p.get_title(), 'ty':'poem', 'route':p.route} for p in sorted(poems, key=lambda p:len(p.title), reverse=True)]
     return app.utility.xhr_response({'poets':poets, 'poems':poems}, 200)
 
 @app.flask_app.route('/save-record', methods=['POST'])
@@ -89,15 +100,15 @@ def save_record():
     except Exception, e:
         return app.utility.xhr_response({'success':False, 'msg':"Sorry, the hamsters couldn't find a good shelf for that. Please try again."}, 200)
 
-@app.flask_app.route('/get_data/<ty>/<name>')
-def get_data(ty, name):
-    """ty is either poet or poem. name is the exact name of the poet/poem"""
-    name = name.lower()
+@app.flask_app.route('/get-data/<ty>/<route>')
+def get_data(ty, route):
+    """ty is either poet or poem. route is the exact route of the poet/poem"""
+    route = route.lower()
     p = None
     if ty == 'poet':
-        p = app.models.Poet.query.filter(app.models.Poet.name == name).first()
+        p = app.models.Poet.query.filter(app.models.Poet.route == route).first()
     elif ty == 'poem':
-        p = app.models.Poem.query.filter(app.models.Poem.title == name).first()
+        p = app.models.Poem.query.filter(app.models.Poem.route == route).first()
 
     if p:
         return app.utility.xhr_response({'success':True, 'data':p.display()}, 200)

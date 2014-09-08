@@ -1,4 +1,4 @@
-<div ng-show="hasHelp" class="instructions">
+<div class="instructions">
   <!-- I know this sucks. The alternative is to do really complicated --
     -- shit with directives because of the ng-click event being --
     -- inside of all of the compile strings. I choose to save time --
@@ -8,7 +8,7 @@
     <div class="col-xs-8 col-xs-offset-3">
       <p class="instruction-line">
         Speak your favorite poet:
-        <span ng-class="{pointer:!typeless}" class="communicate" ng-click="clickName({ty:'poet', name:'robert frost'})">Robert Frost</span>
+        <a class="communicate" href="/poet/robert-frost">Robert Frost</a>
       </p>
     </div>
   </div>
@@ -16,36 +16,29 @@
     <div class="col-xs-8 col-xs-offset-3">
       <p class="instruction-line">
         Speak your favorite
-        poem: <span ng-class="{pointer:!typeless}" class="communicate"
-                    ng-click="clickName({ty:'poem', name:'the road not taken'})">The Road Not Taken</span>
+        poem: <a class="communicate" href="/poem/the-road-not-taken">The Road Not Taken</a>
       </p>
     </div>
   </div>
   <div class="row">
     <div class="col-xs-8 col-xs-offset-3">
       <p class="instruction-line">
-        Discover our poets and poems: <span ng-class="{pointer:!typeless}" class="communicate" ng-click="clickDiscover()">List</span>
+        Discover our poets and
+        poems: <a class="communicate" href="/discover">List</a>
       </p>
     </div>
   </div>
   <div class="row">
     <div class="col-xs-8 col-xs-offset-3">
       <p class="instruction-line">
-        Find a <span ng-class="{pointer:!typeless}" class="communicate" ng-click="clickRandom()">Random</span> poem
+        Find a <span class="communicate" ng-click="clickRandom()">Random</span> poem
       </p>
     </div>
   </div>
   <div class="row">
     <div class="col-xs-8 col-xs-offset-3">
       <p class="instruction-line">
-        See the instructions again? <span ng-class="{pointer:!typeless}" class="communicate">Help</span>
-      </p>
-    </div>
-  </div>
-  <div class="row" ng-if="hasVoice">
-    <div class="col-xs-8 col-xs-offset-3">
-      <p class="instruction-line">
-        {{typeToggleMessage}}, <span class="communicate pointer" ng-click="toggleTypeless()">click here</span>
+        See the instructions again? <span class="communicate">Help</span>
       </p>
     </div>
   </div>

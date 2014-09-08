@@ -38,11 +38,13 @@ def get_next_audio(title):
 class Poet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text())
+    route = db.Column(db.Text())
     poems = db.relationship('Poem', lazy='dynamic', backref='poet')
     creation_time = db.Column(db.DateTime)
 
     def __init__(self, name):
         self.name = name
+        self.route = utility.dashify(name)
         self.creation_time = utility.get_time()
 
     def get_name(self):
@@ -52,7 +54,7 @@ class Poet(db.Model):
         return check_match(self.name, query)
 
     def display(self):
-        return {'type':'poet', 'name':self.get_name(), 'poems':self.display_poems()}
+        return {'type':'poet', 'name':self.get_name(), 'poems':self.display_poems(), 'route':self.route}
 
     def display_poems(self):
         return [poem.display() for poem in self.poems.all()]
@@ -64,6 +66,7 @@ class Poem(db.Model):
     text = db.Column(db.Text())
     poet_id = db.Column(db.Integer, db.ForeignKey('poet.id'))
     audios = db.relationship('Audio', lazy='dynamic', backref='poem')
+    route = db.Column(db.Text())
 
     def __init__(self, title, text):
         self.title = title
@@ -83,9 +86,11 @@ class Poem(db.Model):
         return 'audio/poems-set/' + audio.filename + audio.ext
 
     def display(self):
+        poet = Poet.query.get(self.poet_id)
         return {'text':format_to_css(self.text), 'title':self.get_title(),
                 'next_audio':get_next_audio(self.title), 'audio':self.get_audio_src(),
-                'poet':Poet.query.get(self.poet_id).get_name(), 'type':'poem'}
+                'poet':poet.get_name(), 'type':'poem',
+                'route':self.route, 'poet_route':poet.route}
 
 def create_poet(name):
     poet = Poet(name)
