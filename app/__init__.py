@@ -6,6 +6,7 @@ import config
 import os
 
 basedir = config.basedir
+baseurl = config.baseurl
 audiodir = '/data/audio'
 if not os.path.exists(audiodir):
     audiodir = '/Users/cinjon/Desktop/code/poetry/app/static/audio'

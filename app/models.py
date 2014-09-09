@@ -1,5 +1,6 @@
 from app import db
 from app import utility
+from app import config
 import random
 import os
 
@@ -83,7 +84,7 @@ class Poem(db.Model):
         if self.audios.count() == 0:
             return None
         audio = random.choice(self.audios.all()) #Pick a random audio from this poem
-        return 'audio/poems-set/' + audio.filename + audio.ext
+        return config.baseurl + '/static/audio/poems-set/' + audio.filename + audio.ext
 
     def display(self):
         poet = Poet.query.get(self.poet_id)

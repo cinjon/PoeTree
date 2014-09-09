@@ -27,8 +27,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
       console.log(newval);
       if (newval && newval.audio) {
         poemAudio.initAudioPlayer('audio-src')
-        var src =  'http://www.typelesspoetry.com/' + newval.audio;
-        poemAudio.setAudioPlayer(src, function() {$scope.isPlaying = false;});
+        poemAudio.setAudioPlayer(newval.audio, function() {$scope.isPlaying = false;});
       }
     });
 
