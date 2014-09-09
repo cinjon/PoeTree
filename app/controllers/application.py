@@ -67,35 +67,23 @@ def typeahead(query=None):
 
 @app.flask_app.route('/save-record', methods=['POST'])
 def save_record():
-    app.flask_app.logger.debug('in save-record')
-    app.flask_app.logger.debug(request.form.keys())
     blob = request.files['file']
-    app.flask_app.logger.debug('got file')
     title = request.form['title']
-    app.flask_app.logger.debug('got title')
     poems_unset = app.audiodir + '/poems-unset/'
     poems_set = app.audiodir + '/poems-set/'
     if not blob:
-        app.flask_app.logger.debug('not blob')
         return app.utility.xhr_response({'success':False, 'msg':"Your voice is too powerful. The hamsters got scared. Please try again."}, 200)
     elif not title:
-        app.flask_app.logger.debug('not title')
         return app.utility.xhr_response({'success':False, 'msg':"There was a mistake. The hamsters are on it."}, 200)
     filename = blob.filename
-    app.flask_app.logger.debug(title)
     try:
         poem = app.models.Poem.query.filter(app.models.Poem.title == title.lower()).first()
-        app.flask_app.logger.debug('got poem')
         if not poem:
-            app.flask_app.logger.debug('no poem with title %s' % title.lower())
             raise
         ext = '.wav'
         blob.save(poems_unset + filename + ext)
-        app.flask_app.logger.debug('saved blob')
         audio = app.models.create_audio(poem.id, ext, filename)
-        app.flask_app.logger.debug('craeted audio %d' % audio.id)
         app.utility.mv(poems_unset + filename + ext, poems_set + filename + ext)
-        app.flask_app.logger.debug('moved audio')
         return app.utility.xhr_response({'success':True, 'poem':poem.display()}, 200)
     except Exception, e:
         return app.utility.xhr_response({'success':False, 'msg':"Sorry, the hamsters couldn't find a good shelf for that. Please try again."}, 200)
