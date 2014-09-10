@@ -23,7 +23,7 @@ def create_audio(poem_id, ext, filename=None):
     poem = Poem.query.get(poem_id)
     if not poem:
         return
-    filename = filename or poem.title
+    filename = filename or poem.poet.name + ' ' + poem.title # a poem may collide in title
     audio = Audio(poem.audios.count(), ext, filename)
     poem.audios.append(audio)
     db.session.add(audio)
@@ -84,7 +84,6 @@ class Poem(db.Model):
     def get_audio_src(self, audio=None):
         if self.audios.count() == 0:
             return None
-
         if not audio:
             audio = random.choice(self.audios.all()) #Pick a random audio from this poem
         return config.baseurl + '/static/audio/poems-set/' + audio.filename + audio.ext
@@ -92,7 +91,7 @@ class Poem(db.Model):
     def display(self, audio=None):
         poet = Poet.query.get(self.poet_id)
         return {'text':format_to_css(self.text), 'title':self.get_title(),
-                'next_audio':get_next_audio(self.title, self.audios.count()),
+                'next_audio':get_next_audio(poet.name + ' ' + self.title, self.audios.count()),
                 'audio':self.get_audio_src(audio), 'poet':poet.get_name(), 'type':'poem',
                 'route':self.route, 'poet_route':poet.route}
 

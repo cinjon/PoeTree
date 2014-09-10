@@ -75,13 +75,14 @@ def save_record():
 
     try:
         poem = app.models.Poem.query.filter(app.models.Poem.route == route.lower()).first()
-        filename = app.models.get_next_audio(poem.title, poem.audios.count())
+        filename_template = poem.poet.name + ' ' + poem.title
+        filename = app.models.get_next_audio(filename_template, poem.audios.count())
         if not poem:
             raise
         ext = '.wav'
-        blob.save(poems_unset + filename + ext)
-        audio = app.models.create_audio(poem.id, ext, poem.title)
-        app.utility.mv(poems_unset + filename + ext, poems_set + filename + ext)
+        blob.save(poems_unset + filename + ext) # save the file successfully
+        audio = app.models.create_audio(poem.id, ext, filename_template) # then create the audio
+        app.utility.mv(poems_unset + filename + ext, poems_set + filename + ext) # then move the file to the right dir
         return app.utility.xhr_response({'success':True, 'poem':poem.display(audio)}, 200)
     except Exception, e:
         return app.utility.xhr_response({'success':False, 'msg':"Sorry, the hamsters couldn't find a good shelf for that. Please try again."}, 200)
