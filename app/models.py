@@ -86,7 +86,10 @@ class Poem(db.Model):
             return None
         if not audio:
             audio = random.choice(self.audios.all()) #Pick a random audio from this poem
-        return config.baseurl + '/static/audio/poems-set/' + audio.filename + audio.ext
+        baseurl = config.baseurl
+        if config.phenv != 'prod':
+            baseurl += '/static'
+        return baseurl + '/audio/poems-set/' + audio.filename + audio.ext
 
     def display(self, audio=None):
         poet = Poet.query.get(self.poet_id)
