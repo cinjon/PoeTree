@@ -3,15 +3,14 @@
 angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectives', 'ui.bootstrap', 'angular-loading-bar'])
   .controller('main', function($scope, $http, $location, $window) {
     $scope.hasBack = false;
-    $scope.hasHelp = false;
     $scope.hasAudio = false;
     $scope.hasDiscover = false;
+    $scope.hasRandom = false;
     $scope.isPlaying = false;
-    var poemAudio = new PoemAudio($window);
 
-    $scope.setVars = function(hasBack, hasHelp, hasAudio, hasDiscover) {
+    $scope.setVars = function(hasBack, hasRandom, hasAudio, hasDiscover) {
       $scope.hasBack = hasBack;
-      $scope.hasHelp = hasHelp;
+      $scope.hasRandom = hasRandom;
       $scope.hasAudio = hasAudio;
       $scope.hasDiscover = hasDiscover;
     }
@@ -19,20 +18,14 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
       $scope.poem = poem;
       $scope.poet = poet;
       $scope.searchTerm = searchTerm;
+      if (poem && poem.audio) {
+        $scope.hasAudio = true;
+      }
     }
     $scope.setObject(null, null, null);
 
-    $scope.$watch('poem', function(newval) {
-      console.log('new poem')
-      console.log(newval);
-      if (newval && newval.audio) {
-        poemAudio.initAudioPlayer('audio-src')
-        poemAudio.setAudioPlayer(newval.audio, function() {$scope.isPlaying = false;});
-      }
-    });
-
     function doClick(f, optional_var) {
-      if ($scope.isPlaying) {$scope.audioPlayer.pause()}
+      if ($scope.isPlaying) {poemAudio.pauseAudio()}
       f(optional_var);
     }
     function doRandom() {
@@ -53,12 +46,17 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     }
     function doPlay() {
       if ($scope.poem && $scope.poem.audio != null) {
+        if (!$scope.initializedAudioPlayer) {
+          poemAudio.initAudioPlayer('audio-src')
+          $scope.initializedAudioPlayer = true;
+        }
+        poemAudio.setAudioPlayer($scope.poem.audio, audioPlayerEnded($scope))
         poemAudio.playAudio()
         $scope.isPlaying = true;
       }
     }
 
-    $scope.clickRandom = function() {
+    $scope._clickRandom = function() {
       doClick(doRandom);
     }
     $scope._clickBack = function() {
@@ -66,6 +64,10 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     }
     $scope._clickPlay = function() {
       doClick(doPlay);
+    }
+
+    var audioPlayerEnded = function() {
+      $scope.isPlaying = false;
     }
 
     $scope._getTypeaheadValues = function(val) {
@@ -88,28 +90,15 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
   .controller('about', function($scope) {
 
   })
-  .controller('discover', function($scope, $http) {
-    $scope.$parent.setVars(false, false, false, true);
-    $http.get('/all', {}).then(function(result) {
-      var poems = result.data.poems;
-      $scope.poemNamesFirst = poems.slice(0,Math.ceil(poems.length/3))
-      $scope.poemNamesSecond = poems.slice(Math.ceil(poems.length/3), 2*Math.ceil(poems.length/3));
-      $scope.poemNamesThird = poems.slice(2*Math.ceil(poems.length/3));
-      $scope.poets = result.data.poets;
-    });
-  })
-  .controller('home', function($scope) {
+  .controller('home', function($scope, $http) {
     $scope.$parent.setVars(false, true, false, false);
-    $scope.$parent.setObject(null, null, '');
-
-    $scope.clickRandom = function() {
-      $scope.$parent.clickRandom();
-    }
+    $http.get('/all-poets', {}).then(function(result) {
+      $scope.poetLists = sliceIntoArrays(result.data.poets, 3)
+    });
   })
   .controller('poem', function($scope, $location, $routeParams, $sanitize, $window, $timeout, Poem, Post) {
     redirectIfNotArgs([$routeParams.route], $location)
 
-    var poemAudio = new PoemAudio($window);
     $window.addEventListener('load', poemAudio.initAudioRecorder());
     $window.addEventListener('load', poemAudio.initAudioPlayer('audio-src'));
 
@@ -124,7 +113,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
       var hasBack = $routeParams.hasBack;
       var hasAudio = data.audio != null;
       setPoem(data);
-      $scope.$parent.setVars(hasBack, false, hasAudio, false);
+      $scope.$parent.setVars(hasBack, !hasBack, hasAudio, !hasAudio);
       $scope.hasAudio = data.audio == null;
       $scope.hasVoice = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
       if ($scope.hasVoice) {
@@ -174,14 +163,13 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     }
     $scope.save = function() {
       // Upload the recording to the server
-      console.log('saving')
-      if ($scope.isPlaying) {console.log('pausing'); poemAudio.pauseAudio(); console.log('paused')}
+      if ($scope.isPlaying) {poemAudio.pauseAudio()}
       $scope.isLoading = true;
 
       var form = new FormData();
       var record = poemAudio.getRecord();
-      form.append('file', record.blob, $scope.poem.next_audio);
-      form.append('title', $scope.poem.title);
+      form.append('file', record.blob);
+      form.append('route', $scope.poem.route);
 
       Post.postRecord(form).then(function(data) {
         if (data.data.success) {
@@ -226,7 +214,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     var poetQuery = Poet.get({route:$routeParams.route}, function(result) {
       var data = result.data;
       $scope.poet = data;
-      $scope.$parent.setVars(false, false, false, false);
+      $scope.$parent.setVars(false, true, false, true);
       $scope.$parent.setObject(null, data, data.name);
       $scope.list = data.poems;
     });
@@ -236,16 +224,12 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     function($routeProvider, $locationProvider) {
       $routeProvider
 	.when('/', {
-	  templateUrl: '/static/partials/instructions.html',
+	  templateUrl: '/static/partials/home.html',
           controller: 'home'
 	})
         .when('/about', {
           templateUrl: '/static/partials/about.html',
           controller: 'about'
-        })
-        .when('/discover', {
-          templateUrl: '/static/partials/discover.html',
-          controller: 'discover'
         })
         .when('/poet/:route', {
           templateUrl: '/static/partials/poet.html',
@@ -275,17 +259,22 @@ function redirectIfNotArgs(params, $location) {
   }
 }
 
-function PoemAudio($window) {
-  $window.audioContext = $window.AudioContext || $window.webkitAudioContext;
+function PoemAudio() {
   var audioRecorder = null;
   var audioPlayer = null;
   var record = {'url':null, 'blob':null};
+  var initializedAudioRecorder = false;
+  var initializedAudioPlayer = false;
 
   this.getRecord = function() {
     return record;
   }
 
   this.initAudioRecorder = function() {
+    if (initializedAudioRecorder) {
+      return;
+    }
+
     if (!navigator.getUserMedia)
       navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
     if (!navigator.cancelAnimationFrame)
@@ -295,14 +284,16 @@ function PoemAudio($window) {
 
     var callback = gotStream;
     navigator.getUserMedia({audio:true}, callback, function(e) {
-      alert('Error getting audio');
       console.log(e);
     });
   };
 
   this.initAudioPlayer = function(domID) {
-    audioPlayer = document.getElementById(domID);
-    this.setAudioPlayer('', null);
+    if (!initializedAudioPlayer || initializedAudioPlayer != domID) {
+      initializedAudioPlayer = domID;
+      audioPlayer = document.getElementById(domID);
+      this.setAudioPlayer('', null);
+    }
   }
 
   this.setAudioPlayer = function(src, callback) {
@@ -342,12 +333,25 @@ function PoemAudio($window) {
     var audioInput = realAudioInput;
     audioInput.connect(inputPoint);
     audioRecorder = new Recorder(inputPoint);
+    initializedAudioRecorder = true;
   };
 
   var doneEncoding = function(blob) {
-    console.log('in doneEncoding');
     record.url = (window.URL || window.webkitURL).createObjectURL(blob);
     record.blob = blob;
-    console.log(record);
   }
+}
+var poemAudio = new PoemAudio();
+
+var sliceIntoArrays = function(arr, num) {
+  //divides arr into num ~= arrays and returns them
+  var ret = [];
+  var div = parseInt(arr.length / num);
+  var multiple = 1;
+  while (multiple < num) {
+    ret.push(arr.slice((multiple-1)*div, multiple*div))
+    multiple += 1;
+  }
+  ret.push(arr.slice(multiple*div));
+  return ret;
 }

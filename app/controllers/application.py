@@ -1,6 +1,6 @@
 import app
 import os
-from flask import send_from_directory, render_template, make_response, request, abort
+from flask import send_from_directory, make_response, request, redirect
 from  sqlalchemy.sql.expression import func, select
 import random
 
@@ -15,7 +15,7 @@ def favicon():
 
 @app.flask_app.errorhandler(404)
 def page_not_found(e):
-    return render_template('404.html'), 404
+    return redirect('/')
 
 # routing for basic pages (pass routing onto the Angular app)
 @app.flask_app.route('/')
@@ -28,6 +28,7 @@ def basic_pages(**kwargs):
 def make_response_by_route(route, model):
     if route and model.query.filter(model.route == route).first():
         return make_response(open('app/public/template/index.html').read())
+    return redirect('/')
 
 @app.flask_app.route('/poet/<route>')
 def poet(route):
@@ -36,26 +37,22 @@ def poet(route):
 @app.flask_app.route('/poem/<route>')
 def poem(route):
     return make_response_by_route(route, app.models.Poem)
-    # abort(404)
 
 @app.flask_app.route('/random-poem-route')
 def random_poem_route():
-    # p = app.models.Poem.query.order_by(func.random()).first() #Get random poem
-    import random
-    poem_routes = [p.route for p in app.models.Poem.query.all() if p.audios.count() > 0]
-    random.shuffle(poem_routes)
-    route = poem_routes[0]
-    if not route:
-        return app.utility.xhr_response(
-            {'success':False}, 400)
+    p = app.models.Poem.query.order_by(func.random()).first() #Get random poem
     return app.utility.xhr_response(
-        {'success':True, 'route':route}, 200)
+        {'success':True, 'route':p.route}, 200)
+
+@app.flask_app.route('/all-poets')
+def all_poets():
+    poets = [{'name':p.get_name(), 'ty':'poet', 'route':p.route} for p in sorted(app.models.Poet.query.all(), key=lambda p:len(p.name))]
+    return app.utility.xhr_response({'poets':poets,}, 200)
 
 @app.flask_app.route('/typeahead/<query>')
-@app.flask_app.route('/all')
 def typeahead(query=None):
-    poems = app.models.Poem.query.all()
     poets = app.models.Poet.query.all()
+    poems = app.models.Poem.query.all()
     if query is not None:
         query = query.lower()
         poets = get_matching(poets, query)[:typeahead_limit]
@@ -68,23 +65,24 @@ def typeahead(query=None):
 @app.flask_app.route('/save-record', methods=['POST'])
 def save_record():
     blob = request.files['file']
-    title = request.form['title']
+    route = request.form['route']
     poems_unset = app.audiodir + '/poems-unset/'
     poems_set = app.audiodir + '/poems-set/'
     if not blob:
         return app.utility.xhr_response({'success':False, 'msg':"Your voice is too powerful. The hamsters got scared. Please try again."}, 200)
-    elif not title:
+    elif not route:
         return app.utility.xhr_response({'success':False, 'msg':"There was a mistake. The hamsters are on it."}, 200)
-    filename = blob.filename
+
     try:
-        poem = app.models.Poem.query.filter(app.models.Poem.title == title.lower()).first()
+        poem = app.models.Poem.query.filter(app.models.Poem.route == route.lower()).first()
+        filename = app.models.get_next_audio(poem.title, poem.audios.count())
         if not poem:
             raise
         ext = '.wav'
         blob.save(poems_unset + filename + ext)
-        audio = app.models.create_audio(poem.id, ext, filename)
+        audio = app.models.create_audio(poem.id, ext, poem.title)
         app.utility.mv(poems_unset + filename + ext, poems_set + filename + ext)
-        return app.utility.xhr_response({'success':True, 'poem':poem.display()}, 200)
+        return app.utility.xhr_response({'success':True, 'poem':poem.display(audio)}, 200)
     except Exception, e:
         return app.utility.xhr_response({'success':False, 'msg':"Sorry, the hamsters couldn't find a good shelf for that. Please try again."}, 200)
 

@@ -13,9 +13,9 @@ class Audio(db.Model):
     creation_time = db.Column(db.DateTime)
     youtube = db.Column(db.Text()) #in case we decide to upload to youtube
 
-    def __init__(self, poem_title, ext, filename=None):
+    def __init__(self, poem_audio_count, ext, filename):
         self.ext = ext
-        self.filename = filename or get_next_audio(poem_title)
+        self.filename = get_next_audio(filename, poem_audio_count)
         self.creation_time = utility.get_time()
         self.youtube = None
 
@@ -23,17 +23,17 @@ def create_audio(poem_id, ext, filename=None):
     poem = Poem.query.get(poem_id)
     if not poem:
         return
-    audio = Audio(poem.title, ext, filename)
+    filename = filename or poem.title
+    audio = Audio(poem.audios.count(), ext, filename)
     poem.audios.append(audio)
     db.session.add(audio)
     db.session.commit()
     return audio
 
-def get_next_audio(title):
-    filename = utility.dashify(title)
-    filename_count = Audio.query.filter(Audio.filename == filename).count()
-    if filename_count > 0:
-        filename += '-' + str(filename_count)
+def get_next_audio(filename, count):
+    filename = utility.dashify(filename)
+    if count > 0:
+        filename += '-' + str(count)
     return filename
 
 class Poet(db.Model):
@@ -80,17 +80,19 @@ class Poem(db.Model):
     def check_match(self, query):
         return check_match(self.title, query)
 
-    def get_audio_src(self):
+    def get_audio_src(self, audio=None):
         if self.audios.count() == 0:
             return None
-        audio = random.choice(self.audios.all()) #Pick a random audio from this poem
+
+        if not audio:
+            audio = random.choice(self.audios.all()) #Pick a random audio from this poem
         return config.baseurl + '/static/audio/poems-set/' + audio.filename + audio.ext
 
-    def display(self):
+    def display(self, audio=None):
         poet = Poet.query.get(self.poet_id)
         return {'text':format_to_css(self.text), 'title':self.get_title(),
-                'next_audio':get_next_audio(self.title), 'audio':self.get_audio_src(),
-                'poet':poet.get_name(), 'type':'poem',
+                'next_audio':get_next_audio(self.title, self.audios.count()),
+                'audio':self.get_audio_src(audio), 'poet':poet.get_name(), 'type':'poem',
                 'route':self.route, 'poet_route':poet.route}
 
 def create_poet(name):
