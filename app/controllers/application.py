@@ -47,7 +47,7 @@ def random_poem_route():
 @app.flask_app.route('/all-poets')
 def all_poets():
     poets = [{'name':p.get_name(), 'ty':'poet', 'route':p.route} for p in sorted(app.models.Poet.query.all(), key=lambda p:len(p.name))]
-    return app.utility.xhr_response({'poets':poets,}, 200)
+    return app.utility.xhr_response({'poets':poets}, 200)
 
 @app.flask_app.route('/typeahead/<query>')
 def typeahead(query=None):

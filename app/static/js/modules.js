@@ -352,6 +352,6 @@ var sliceIntoArrays = function(arr, num) {
     ret.push(arr.slice((multiple-1)*div, multiple*div))
     multiple += 1;
   }
-  ret.push(arr.slice(multiple*div));
+  ret.push(arr.slice((multiple-1)*div));
   return ret;
 }
