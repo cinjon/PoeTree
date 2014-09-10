@@ -1,6 +1,7 @@
 from app import db
 from app import utility
 from app import config
+from unidecode import unidecode
 import random
 import os
 
@@ -31,7 +32,7 @@ def create_audio(poem_id, ext, filename=None):
     return audio
 
 def get_next_audio(filename, count):
-    filename = utility.dashify(filename)
+    filename = utility.dashify(unidecode(filename))
     if count > 0:
         filename += '-' + str(count)
     return filename
@@ -45,7 +46,7 @@ class Poet(db.Model):
 
     def __init__(self, name):
         self.name = name
-        self.route = utility.dashify(name)
+        self.route = utility.dashify(unidecode(name))
         self.creation_time = utility.get_time()
 
     def get_name(self):
@@ -73,6 +74,7 @@ class Poem(db.Model):
         self.title = title
         self.text = text
         self.creation_time = utility.get_time()
+        self.route = utility.dashify(unidecode(title))
 
     def get_title(self):
         return self.title.title()
