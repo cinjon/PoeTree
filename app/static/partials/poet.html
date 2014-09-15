@@ -1,17 +1,14 @@
 <div class="body-text">
-  <div class="poem-list-line" ng-repeat="poem in list track by $index">
-    <a href="/poem/{{poem.route}}?hasBack">
-      <div class="list-index communicate">
-        Choose {{$index+1 | numToStr}}
-      </div>
-    </a>
-    <div class="list-info">
-      <div class="list-name">
-        {{poem.title}}
-      </div>
-      <div class="list-extra">
-        {{poem.extra}}
-      </div>
+  <div class="row poem-list-line" ng-repeat="poem in list track by $index">
+    <div class="col-xs-1">
+      <a href="{{getPoemHref(poem)}}">
+        <div class="communicate">
+          {{$index+1 | numToStr}}
+        </div>
+      </a>
+    </div>
+    <div class="col-xs-10 col-xs-offset-1">
+      <a class="communicate" href="{{getPoemHref(poem)}}">{{poem.title}}</a>
     </div>
   </div>
 </div>

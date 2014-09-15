@@ -54,7 +54,7 @@
         <div class="form-control search communicate">
           <div class="search-button" ng-class="{visible:hasBack || hasRandom}">
             <span ng-if="hasBack" ng-click="_clickBack()">Back</span>
-            <span ng-if="!hasBack && hasRandom" ng-click="_clickRandom()">Rand</span></a>
+            <span ng-if="!hasBack && hasRandom" ng-click="_clickRandom()">Rand</span>
             <span ng-if="!hasBack && !hasRandom">Fake</span>
           </div>
           <input id="searchBox" type="text" class="search-term"
@@ -64,7 +64,9 @@
                  typeahead-min-lenth="3" typeahead-on-select="_onSelectSearchTerm($item, $model, $label)">
           <div class="search-button" ng-class="{visible:hasAudio || hasDiscover}">
             <span ng-if="hasAudio && !isLoading" ng-click="_clickPlay()">Play</span>
-            <span ng-if="!hasAudio && hasDiscover"><a class="communicate" href="/discover">List</a></span>
+            <span ng-if="!hasAudio && hasDiscover">
+              <a class="communicate" href="/">List</a>
+            </span>
             <span ng-if="!hasAudio && !hasDiscover">Fake</span>
           </div>
         </div>

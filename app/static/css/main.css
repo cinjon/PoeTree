@@ -3,14 +3,6 @@ body {
    font-weight: 300;
 }
 
-#home-title {
-    font-size:25px;
-    margin-top:150px;
-    text-align:center;
-    font-weight:800;
-    color: rgba(9, 14, 207, .5) !important;
-}
-
 .aligncenter {
     text-align:center;
 }
@@ -20,6 +12,9 @@ body {
 
 .page {
     margin-top:20px;
+}
+.mobile-page {
+    margin-top:60px;
 }
 
 .communicate {
@@ -40,7 +35,11 @@ a.communicate, span.communicate {
 .content-text {
     margin-top:25px;
     height: 605px;
-    font-size: 20px;
+    font-size: 25px;
+}
+.mobile-content-text {
+    margin-top:25px;
+    font-size:40px;
 }
 
 .search-button {
@@ -71,13 +70,21 @@ a.communicate, span.communicate {
 }
 
 .discover-line {
-    height:27px;
+    height:45px;
     cursor:pointer;
 }
-
+.mobile-discover-line {
+    height:65px;
+    cursor:pointer;
+}
 .discover {
-    font-size: 17px;
     margin-top:80px;
+}
+
+.mobile-form-control {
+    height:100px;
+    font-size:40px;
+    border-color: rgba(9, 194, 207, .5);
 }
 
 .search-term {
@@ -89,10 +96,18 @@ a.communicate, span.communicate {
     max-width:760px;
     border:0;
 }
+.mobile-search-term {
+    text-align:center;
+    width:100%;
+    border:0;
+    height:80px;
+}
 
 .poem-list-line {
-    clear:both;
-    height:45px;
+    margin-top:15px;
+}
+.mobile-poet-list {
+    margin-bottom:75px;
 }
 
 .warning {
@@ -107,6 +122,7 @@ a.communicate, span.communicate {
 }
 
 .supplementary-info {
+    margin-top:30px;
     margin-left:15px;
     margin-bottom:15px;
 }
@@ -114,10 +130,18 @@ a.communicate, span.communicate {
 .poem-text {
     height:497px;
     overflow:scroll;
+    margin-left:15px;
+    margin-top:30px;
+}
+.mobile-poem-text {
+    margin-left:15px;
+    margin-top:30px;
+    padding-bottom:75px;
 }
 
 .body-text {
     margin-left:15px;
+    margin-top:80px;
 }
 
 .list-index {

@@ -2,17 +2,20 @@ import app
 import os
 from flask import send_from_directory, make_response, request, redirect
 from  sqlalchemy.sql.expression import func, select
+from flask.ext.mobility.decorators import mobile_template
 import random
 
 find_limit = 5
 typeahead_limit = 10
+mobile_and_index_template = 'app/public/template/{mobile_}index.html'
+mobile_index_template = 'app/public/template/mobile_index.html'
+index_template = 'app/public/template/index.html'
 
 # special file handlers and error handlers
 @app.flask_app.route('/favicon.ico')
 def favicon():
     return send_from_directory(
         os.path.join(app.flask_app.root_path, 'static'), 'img/favicon.ico')
-
 
 @app.flask_app.errorhandler(404)
 def page_not_found(e):
@@ -21,27 +24,29 @@ def page_not_found(e):
 # routing for basic pages (pass routing onto the Angular app)
 @app.flask_app.route('/')
 @app.flask_app.route('/about')
-@app.flask_app.route('/home')
-@app.flask_app.route('/discover')
-def basic_pages(**kwargs):
-    return make_response(open('app/public/template/index.html').read())
+@mobile_template(mobile_and_index_template)
+def basic_pages(template):
+    return make_response(open(template).read())
 
 @app.flask_app.route('/google34d3fe92d155a2aa.html')
 def google_verification(**kwargs):
     return make_response(open('app/public/template/google34d3fe92d155a2aa.html').read())
 
-def make_response_by_route(route, model):
+def make_response_by_route(mobile, route, model):
     if route and model.query.filter(model.route == route).first():
-        return make_response(open('app/public/template/index.html').read())
+        template = index_template
+        if mobile:
+            template = mobile_index_template
+        return make_response(open(template).read())
     return redirect('/')
 
 @app.flask_app.route('/poet/<route>')
 def poet(route):
-    return make_response_by_route(route, app.models.Poet)
+    return make_response_by_route(request.MOBILE, route, app.models.Poet)
 
 @app.flask_app.route('/poem/<route>')
 def poem(route):
-    return make_response_by_route(route, app.models.Poem)
+    return make_response_by_route(request.MOBILE, route, app.models.Poem)
 
 @app.flask_app.route('/random-poem-route')
 def random_poem_route():

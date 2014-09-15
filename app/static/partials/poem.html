@@ -2,12 +2,29 @@
   <audio id="audio-src"></audio>
 </div>
 
-<div class="supplementary-info">
-  <a href="/poet/{{poem.poet_route}}"><span class="communicate">{{poem.poet}}</span></a>
-  <span ng-show="hasVoice" class="record-button communicate"
-  ng-click="toggleRecord(poem)" ng-class="{red:recording}">{{recordMessage}}</span>
-  <span class="record-button communicate" ng-click="playback()" ng-show="hasPlayback && !hasSaved">Playback</span>
-  <span class="record-button communicate" ng-click="save()" ng-show="hasPlayback && !hasSaved">Save</span>
-  <a id="download-link" ng-click="download()"><span class="record-button communicate" ng-show="hasPlayback">Download</span></a>
+<div ng-if="!mobile">
+  <div class="supplementary-info">
+    <a href="/poet/{{poem.poet_route}}"><span class="communicate">{{poem.poet}}</span></a>
+    <span ng-show="hasVoice" class="record-button communicate" ng-click="toggleRecord(poem)" ng-class="{red:recording}">{{recordMessage}}</span>
+    <span class="record-button communicate" ng-click="playback()" ng-show="hasPlayback && !hasSaved">Playback</span>
+    <span class="record-button communicate" ng-click="save()" ng-show="hasPlayback && !hasSaved">Save</span>
+    <a id="download-link" ng-click="download()"><span class="record-button communicate" ng-show="hasPlayback">Download</span></a>
+  </div>
+  <div class="poem-text" ng-bind-html="sanitize(poem.text)"></div>
 </div>
-<div class="poem-text body-text" ng-bind-html="sanitize(poem.text)"></div>
+
+<div ng-if="mobile">
+  <div class="supplementary-info">
+    <a href="/poet/{{poem.poet_route}}"><span class="communicate">{{poem.poet}}</span></a>
+    <div class="record-button communicate">
+      <span ng-click="random()">Random</span>
+    </div>
+    <div class="record-button communicate" ng-if="hasAudio">
+      <span ng-click="play()">Play</span>
+    </div>
+    <div class="record-button communicate">
+      <span><a class="communicate" href="/">List</a></span>
+    </div>
+  </div>
+  <div class="mobile-poem-text" ng-bind-html="sanitize(poem.text)"></div>
+</div>

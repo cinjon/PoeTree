@@ -1,7 +1,14 @@
 <div class="communicate discover">
-  <div class="col-xs-4" ng-repeat="poetList in poetLists track by $index"
+  <div ng-if="!mobile" class="col-xs-4" ng-repeat="poetList in poetLists track by $index"
     ng-class="{aligncenter:$index==1, alignright:$index==2}">
     <div class="row discover-line" ng-repeat="poet in poetList">
+      <a href="/poet/{{poet.route}}" class="communicate">{{poet.name}}</a>
+    </div>
+  </div>
+
+  <div ng-if="mobile" class="col-xs-6 mobile-poet-list" ng-repeat="poetList in poetLists track
+  by $index" ng-class="{alignright:$index==1}">
+    <div class="row mobile-discover-line" ng-repeat="poet in poetList">
       <a href="/poet/{{poet.route}}" class="communicate">{{poet.name}}</a>
     </div>
   </div>

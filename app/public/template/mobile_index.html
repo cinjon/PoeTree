@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en" ng-app="Poetree">
+<head>
+  <meta charset="utf-8">
+  <title>PattyHaus Poetry</title>
+
+  <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/css/main.css">
+  <link rel="stylesheet" href="/static/lib/loading/loading-bar.css">
+
+  <script src="/static/lib/jquery/jquery-1.11.1.min.js"></script>
+  <script src="/static/lib/bootstrap/bootstrap.min.js"></script>
+
+  <script src="/static/lib/angular/angular.min.js"></script>
+  <script src="/static/lib/angular/angular-route.js"></script>
+  <script src="/static/lib/angular/angular-resource.js"></script>
+  <script src="/static/lib/angular/angular-sanitize.min.js"></script>
+  <script src="/static/lib/angular/ui-bootstrap-tpls-0.9.0.js"></script>
+
+  <script src="/static/lib/audiojs/audio.min.js"></script>
+  <script src="/static/lib/loading/loading-bar.js"></script>
+
+  <script src="/static/js/modules.js"></script>
+  <script src="/static/js/controllers.js"></script>
+  <script src="/static/js/directives.js"></script>
+  <script src="/static/js/services.js"></script>
+  <script src="/static/js/filters.js"></script>
+</head>
+<body>
+  <div class="mobile-page">
+    <div class="content" ng-controller="main">
+      <div class="row">
+        <div class="form-control mobile-form-control communicate">
+          <input id="searchBox" type="text" class="mobile-search-term"
+                 ng-focus="_searchFocus($event)" ng-blur="_searchBlur($event)"
+                 placeholder="here, type here" ng-model="searchTerm"
+                 typeahead="search.name for search in _getTypeaheadValues($viewValue) | filter:$viewValue"
+                 typeahead-min-lenth="3" typeahead-on-select="_onSelectSearchTerm($item, $model, $label)">
+        </div>
+      </div>
+      <div class="row">
+        <p class="warning">{{warningTerm}}</p>
+      </div>
+
+      <div class="mobile-content-text" ng-view></div>
+    </div>
+  </div>
+</body>
+</html>
