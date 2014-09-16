@@ -96,6 +96,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
   .controller('home', function($scope, $http) {
     $scope.mobile = $scope.$parent.mobile;
     $scope.$parent.setVars(false, true, false, false);
+    $scope.setObject(null, null, null);
     $http.get('/all-poets', {}).then(function(result) {
       if ($scope.mobile) {
         $scope.poetLists = sliceIntoArrays(result.data.poets, 2);
