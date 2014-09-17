@@ -59,9 +59,11 @@
           </div>
           <input id="searchBox" type="text" class="search-term" blur-me="{{shouldBlurSearch}}"
                  ng-focus="_searchFocus($event)" ng-blur="_searchBlur($event)"
-                 placeholder="here, type here" ng-model="searchTerm"
+                 placeholder="here, type here" ng-model="searchTerm" typeahead-wait-ms="5"
                  typeahead="search.name for search in _getTypeaheadValues($viewValue) | filter:$viewValue"
-                 typeahead-min-length="3" typeahead-on-select="_onSelectSearchTerm($item, $model, $label)">
+                 typeahead-min-length="3"
+                 typeahead-on-select="_onSelectSearchTerm($item, $model,
+                 $label)" typeahead-template-url="typeahead-template.html">
           <div class="search-button" ng-class="{visible:hasAudio || hasDiscover}">
             <span ng-if="hasAudio && !isLoading" ng-click="_clickPlay()">Play</span>
             <span ng-if="!hasAudio && hasDiscover">
@@ -78,3 +80,10 @@
   </div>
 </body>
 </html>
+
+<script type="text/ng-template" id="typeahead-template.html">
+  <a>
+    <span class="typeahead-template-span" bind-html-unsafe="match.label |
+  typeaheadHighlight:query"></span>
+  </a>
+</script>

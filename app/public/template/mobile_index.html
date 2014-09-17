@@ -33,7 +33,7 @@
         <div class="form-control mobile-form-control communicate">
           <input id="searchBox" type="text" class="mobile-search-term" blur-me="{{shouldBlurSearch}}"
                  ng-focus="_searchFocus($event)" ng-blur="_searchBlur($event)"
-                 placeholder="here, type here" ng-model="searchTerm"
+                 placeholder="here, type here" ng-model="searchTerm" typeahead-wait-ms="5"
                  typeahead="search.name for search in _getTypeaheadValues($viewValue) | filter:$viewValue"
                  typeahead-min-lenth="3" typeahead-on-select="_onSelectSearchTerm($item, $model, $label)">
         </div>

@@ -165,6 +165,13 @@ a.communicate, span.communicate {
     text-align:right;
 }
 
+.dropdown-menu > li > a {
+    padding: 4px 20px;
+}
+.typeahead-template-span {
+    font-size:16px;
+}
+
 .red {
     color:#D61E74 !important;
 }
