@@ -3,6 +3,7 @@ from app import utility
 from app import config
 import random
 import os
+from memorised.decorators import memorise
 
 class Audio(db.Model):
     # Poems have audio files. These are UGC.
@@ -30,6 +31,7 @@ def create_audio(poem_id, ext, filename=None):
     db.session.commit()
     return audio
 
+@memorise()
 def get_next_audio(filename, count):
     filename = utility.dashify(filename)
     if count > 0:
@@ -48,6 +50,7 @@ class Poet(db.Model):
         self.route = utility.dashify(name)
         self.creation_time = utility.get_time()
 
+    @memorise(parent_keys=['id'])
     def get_name(self):
         return self.name.title()
 
@@ -75,6 +78,7 @@ class Poem(db.Model):
         self.creation_time = utility.get_time()
         self.route = utility.dashify(title)
 
+    @memorise(parent_keys=['id'])
     def get_title(self):
         return self.title.title()
 
@@ -120,6 +124,7 @@ def create_poem(title, text, poet_id):
     db.session.commit()
     return poem
 
+@memorise()
 def format_to_css(text):
     parts = [p.strip() for p in text.strip('\n').split('\n')]
     for num,p in enumerate(parts):
@@ -132,6 +137,7 @@ def format_to_css(text):
                 parts[num] = p.replace(p[:k], '&nbsp;'*k)
     return '<p>' + '</p><p>'.join(parts) + '</p>'
 
+@memorise()
 def check_match(phrase, query):
     # Check to see if query matches phrase in some way, e.g.
     # query="john" matches on phrase={"john keats", "mr john", "john goes to washington"}
