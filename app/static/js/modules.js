@@ -109,7 +109,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
     redirectIfNotArgs([$routeParams.route], $location)
 
     $scope.mobile = $scope.$parent.mobile;
-    if (!$scope.mobile) {
+    if (!$scope.mobile && hasNavigatorUserMedia()) {
       $window.addEventListener('load', poemAudio.initAudioRecorder());
     }
     $window.addEventListener('load', poemAudio.initAudioPlayer('audio-src'));
@@ -129,7 +129,7 @@ angular.module('Poetree', ['poetreeServices', 'poetreeFilters', 'poetreeDirectiv
       setPoem(data);
       $scope.$parent.setVars(hasBack, !hasBack, hasAudio, !hasAudio);
       $scope.hasAudio = hasAudio;
-      $scope.hasVoice = !$scope.mobile && (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+      $scope.hasVoice = !$scope.mobile && hasNavigatorUserMedia();
       if ($scope.hasVoice) {
         $scope.hasPlayback = false;
         $scope.hasSaved = false;
@@ -383,6 +383,13 @@ var sliceIntoArrays = function(arr, num) {
   }
   ret.push(arr.slice((multiple-1)*div));
   return ret;
+}
+
+var hasNavigatorUserMedia = function() {
+  if (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia) {
+    return true;
+  }
+  return false;
 }
 
 window.mobilecheck = function() {
